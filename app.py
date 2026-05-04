@@ -23,8 +23,24 @@ async def procesar(file: UploadFile = File(...)):
         with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # (por ahora solo copiamos)
-        shutil.copy(temp_path, output_path)
+        from docx import Document
+
+        doc = Document(temp_path)
+        
+        texto = "\n".join([p.text for p in doc.paragraphs])
+        
+        # ejemplo simple de detección
+        if "levantamiento" in texto.lower():
+            contenido = "Plantilla de levantamiento detectada"
+        else:
+            contenido = "Otro tipo de documento"
+        
+        # crear nuevo documento
+        nuevo = Document()
+        nuevo.add_heading("Documento generado", 0)
+        nuevo.add_paragraph(contenido)
+        
+        nuevo.save(output_path)
 
         return FileResponse(
             path=output_path,
