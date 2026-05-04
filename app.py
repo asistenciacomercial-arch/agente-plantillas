@@ -16,10 +16,12 @@ from docx import Document
 from docxtpl import DocxTemplate
 
 ```
-    with open("temp.docx", "wb") as buffer:
+    temp_path = "temp.docx"
+
+    with open(temp_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    doc = Document("temp.docx")
+    doc = Document(temp_path)
     texto = "\n".join([p.text for p in doc.paragraphs])
 
     plantilla = "plantillas/confiabilidad.docx"
@@ -37,8 +39,12 @@ from docxtpl import DocxTemplate
     salida = "resultado.docx"
     tpl.save(salida)
 
+    # 🔥 limpiar archivos para no llenar memoria
+    os.remove(temp_path)
+
     return FileResponse(salida, filename="resultado.docx")
 
 except Exception as e:
     return {"error": str(e)}
 ```
+
