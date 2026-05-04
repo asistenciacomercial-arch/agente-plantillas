@@ -39,7 +39,6 @@ from docxtpl import DocxTemplate
     salida = "resultado.docx"
     tpl.save(salida)
 
-    # 🔥 limpiar archivos para no llenar memoria
     os.remove(temp_path)
 
     return FileResponse(salida, filename="resultado.docx")
@@ -47,4 +46,3 @@ from docxtpl import DocxTemplate
 except Exception as e:
     return {"error": str(e)}
 ```
-
