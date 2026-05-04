@@ -1,3 +1,5 @@
 fastapi
-uvicorn[standard]
-gunicorn
+uvicorn
+python-docx
+docxtpl
+python-multipart
