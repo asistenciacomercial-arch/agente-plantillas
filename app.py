@@ -13,24 +13,25 @@ def home():
 
 @app.post("/procesar/")
 async def procesar(file: UploadFile = File(...)):
-    print("🔥 Entró al endpoint")
-
     try:
-        temp_path = "temp.docx"
+        import shutil
 
-        print("📁 Guardando archivo...")
+        temp_path = "temp.docx"
+        output_path = "resultado.docx"
+
+        # Guardar archivo
         with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        print("✅ Archivo guardado")
+        # (por ahora solo copiamos)
+        shutil.copy(temp_path, output_path)
 
-        from docx import Document
-        from docxtpl import DocxTemplate
-
-        print("📦 Librerías cargadas")
-
-        return {"status": "procesado"}
+        return FileResponse(
+            path=output_path,
+            filename="resultado.docx",
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
 
     except Exception as e:
-        print("❌ ERROR:", str(e))
+        return {"error": str(e)}
         return {"error": str(e)}
