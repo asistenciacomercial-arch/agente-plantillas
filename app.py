@@ -1,3 +1,16 @@
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import FileResponse
+import shutil
+import os
+
+app = FastAPI()
+
+
+@app.get("/")
+def home():
+    return {"status": "ok"}
+
+
 @app.post("/procesar/")
 async def procesar(file: UploadFile = File(...)):
     print("🔥 Entró al endpoint")
