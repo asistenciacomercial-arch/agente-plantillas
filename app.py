@@ -58,42 +58,60 @@ def extraer_datos(doc):
 # DETECTAR SERVICIO (X)
 # -------------------------
 def detectar_servicio(doc):
+    servicios_detectados = []
+
     for table in doc.tables:
         for row in table.rows:
-            celdas = [c.text.strip().lower() for c in row.cells]
 
-            if len(celdas) < 2:
-                continue
+            celdas = [c.text.strip().lower() for c in row.cells if c.text.strip()]
 
-            # Detectar si hay X en la fila
-            tiene_x = any("x" in c for c in celdas)
-
-            if not tiene_x:
+            # 🔒 Si la fila está vacía → ignorar
+            if not celdas:
                 continue
 
             texto_fila = " ".join(celdas)
 
-            # 🔥 MAPEO COMPLETO
+            # 🔍 detectar marca (X o variantes)
+            tiene_x = any(
+                c in ["x", "X", "✔", "✓"] or c.strip() == "x"
+                for c in celdas
+            )
+
+            if not tiene_x:
+                continue
+
+            # 🔥 DETECCIÓN REAL
             if "vigilancia" in texto_fila:
-                return "vigilancia"
+                servicios_detectados.append("vigilancia")
 
-            if "seguridad electronica" in texto_fila:
-                return "electronica"
+            elif "seguridad electronica" in texto_fila:
+                servicios_detectados.append("electronica")
 
-            if "confiabilidad" in texto_fila:
-                return "confiabilidad"
+            elif "confiabilidad" in texto_fila:
+                servicios_detectados.append("confiabilidad")
 
-            if "escolta" in texto_fila:
-                return "escolta"
+            elif "escolta" in texto_fila:
+                servicios_detectados.append("escolta")
 
-            if "monitoreo" in texto_fila:
-                return "monitoreo"
+            elif "monitoreo" in texto_fila:
+                servicios_detectados.append("monitoreo")
 
-            if "eventos" in texto_fila:
-                return "eventos"
+            elif "eventos" in texto_fila:
+                servicios_detectados.append("eventos")
 
-            if "logisticos" in texto_fila:
-                return "logistico"
+    # 🧠 Prioridad (por si hay más de uno marcado)
+    prioridad = [
+        "vigilancia",
+        "escolta",
+        "electronica",
+        "confiabilidad",
+        "monitoreo",
+        "eventos"
+    ]
+
+    for p in prioridad:
+        if p in servicios_detectados:
+            return p
 
     return None
     
