@@ -145,7 +145,24 @@ def extraer_datos(doc):
         # compañía (EDIFICIO ...)
         if not datos["compania"] and "EDIFICIO" in t_up:
             datos["compania"] = t_up
-
+    # =====================
+    # CARGO (desde texto real)
+    # =====================
+    for p in doc.paragraphs:
+        t = p.text.strip()
+        t_low = t.lower()
+    
+        if not datos["cargo"]:
+            if any(x in t_low for x in [
+                "gerente",
+                "director",
+                "presidente",
+                "administrador",
+                "coordinador"
+            ]):
+                datos["cargo"] = t
+        if not datos["cargo"]:
+        datos["cargo"] = ""
     # =========================
     # 4. LIMPIEZA FINAL
     # =========================
