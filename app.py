@@ -39,42 +39,50 @@ def determinar_tratamiento(nombre, cargo):
 def extraer_datos(doc):
     datos = {}
 
+    def asignar(clave, valor):
+        clave = clave.lower().strip()
+        valor = (valor or "").strip()
+
+        if not valor:
+            return
+
+        if clave == "contacto":
+            datos["nombre"] = limpiar_nombre(valor)
+
+        elif clave == "cargo":
+            datos["cargo"] = valor
+
+        elif clave == "compañía":
+            datos["compania"] = valor.upper()
+
+        elif clave in ["teléfono", "telefono"]:
+            datos["telefono"] = valor
+
+        elif clave in ["ciudad - lugar", "ciudad"]:
+            datos["ciudad"] = valor
+
+        elif clave in ["e- mail", "e-mail", "correo"]:
+            datos["correo"] = valor
+
+        elif clave == "tipo de servicio":
+            datos["servicio"] = valor.lower()
+
+        elif clave == "tiempo de servicio":
+            datos["modalidad"] = valor.lower()
+
+    # recorrer TODAS las tablas
     for table in doc.tables:
         for row in table.rows:
             cells = [c.text.strip() for c in row.cells]
 
-            # Solo filas tipo clave → valor
-            if len(cells) < 2:
-                continue
+            # 🔥 CASO 4 COLUMNAS: clave, valor, clave, valor
+            if len(cells) >= 4:
+                asignar(cells[0], cells[1])
+                asignar(cells[2], cells[3])
 
-            clave = cells[0].lower().strip()
-            valor = cells[1].strip()
-
-            # 🔥 MAPEO EXACTO (NO ambiguo)
-
-            if clave == "contacto":
-                datos["nombre"] = limpiar_nombre(valor)
-
-            elif clave == "cargo":
-                datos["cargo"] = valor
-
-            elif clave == "compañía":
-                datos["compania"] = valor.upper()
-
-            elif clave == "teléfono":
-                datos["telefono"] = valor
-
-            elif clave == "ciudad - lugar":
-                datos["ciudad"] = valor
-
-            elif clave in ["e- mail", "e-mail", "correo"]:
-                datos["correo"] = valor
-
-            elif clave == "tipo de servicio":
-                datos["servicio"] = valor.lower()
-
-            elif clave == "tiempo de servicio":
-                datos["modalidad"] = valor.lower()
+            # 🔥 CASO 2 COLUMNAS
+            elif len(cells) >= 2:
+                asignar(cells[0], cells[1])
 
     return datos
 # ----------------------------
