@@ -36,7 +36,7 @@ def extraer_datos(doc):
                     continue
 
                 if "contacto" in campo:
-                    datos["nombre"] = valor.upper()
+                    datos["nombre"] = limpiar_nombre(valor)
 
                 elif "cargo" in campo:
                     datos["cargo"] = valor
@@ -149,3 +149,28 @@ async def procesar(file: UploadFile = File(...)):
 
     except Exception as e:
         return {"error": str(e)}
+        
+def limpiar_nombre(nombre):
+    return (
+        nombre.upper()
+        .replace("SR.", "")
+        .replace("SRA.", "")
+        .replace("DR.", "")
+        .replace("DRA.", "")
+        .strip()
+    )
+    def obtener_tratamiento(cargo):
+    cargo = cargo.lower()
+
+    if "gerente" in cargo or "director" in cargo or "presidente" in cargo:
+        return "Doctor"
+    return "Señor"
+    tratamiento = obtener_tratamiento(datos["cargo"])
+
+    reemplazos = {
+        "{{tratamiento}}": tratamiento,
+    }
+    def limpiar_saludo(nombre):
+    return nombre.split()[0].capitalize()
+    "{{saludo}}": "Estimado",
+    "{{nombre_corto}}": limpiar_saludo(datos["nombre"]),
