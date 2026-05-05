@@ -82,18 +82,34 @@ def extraer_datos(doc):
     }
 
     # =========================
-    # TABLA PRINCIPAL (FIJA)
+    # BUSCAR TABLA CORRECTA
     # =========================
-    tabla = doc.tables[0]
+    tabla_objetivo = None
 
-    for row in tabla.rows:
+    for table in doc.tables:
+        texto_tabla = " ".join(cell.text.lower() for row in table.rows for cell in row.cells)
+
+        if "correo" in texto_tabla or "mail" in texto_tabla:
+            tabla_objetivo = table
+            break
+
+    if not tabla_objetivo:
+        print("⚠️ No se encontró tabla de contacto")
+        return datos
+
+    # =========================
+    # EXTRAER DATOS
+    # =========================
+    for row in tabla_objetivo.rows:
+        if len(row.cells) < 2:
+            continue
+
         label = row.cells[0].text.strip().lower()
         value = row.cells[1].text.strip()
 
         if not value:
             continue
 
-        # 👇 EXACTO SEGÚN TU FORMATO
         if "cliente" in label or "contacto" in label:
             datos["nombre"] = limpiar_nombre(value)
 
@@ -113,7 +129,7 @@ def extraer_datos(doc):
             datos["ciudad"] = value
 
     # =========================
-    # RESPALDO (por si ciudad viene abajo)
+    # RESPALDO PARA CIUDAD
     # =========================
     if not datos["ciudad"]:
         for p in doc.paragraphs:
@@ -122,7 +138,7 @@ def extraer_datos(doc):
                 datos["ciudad"] = t.replace(", Colombia", "").strip()
 
     # =========================
-    # LIMPIEZA FINAL
+    # FALLBACKS
     # =========================
     if not datos["nombre"]:
         datos["nombre"] = "CLIENTE"
