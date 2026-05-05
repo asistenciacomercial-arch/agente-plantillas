@@ -54,40 +54,34 @@ def extraer_datos(doc):
     for table in doc.tables:
         for row in table.rows:
 
-            # evitar filas raras
-            if len(row.cells) < 2:
-                continue
+            cells = row.cells
 
-            label = row.cells[0].text.strip().lower()
+            # limpiar textos
+            textos = [c.text.strip() for c in cells]
 
-            # 🔥 manejar filas con 4 columnas (cargo + telefono)
-            if len(row.cells) >= 4:
-                valor_1 = row.cells[1].text.strip()
-                valor_2 = row.cells[3].text.strip()
+            # 🔥 CONTACTO (nombre)
+            if len(cells) >= 2 and "contacto" in textos[0].lower():
+                datos["nombre"] = limpiar_nombre(textos[1])
 
-                if "cargo" in label:
-                    datos["cargo"] = valor_1
+            # 🔥 COMPAÑIA
+            if len(cells) >= 2 and ("compañ" in textos[0].lower() or "edificio" in textos[0].lower()):
+                datos["compania"] = textos[1].upper()
 
-                if "tel" in row.cells[2].text.lower():
-                    datos["telefono"] = valor_2.replace(" ", "")
+            # 🔥 EMAIL
+            if len(cells) >= 2 and "mail" in textos[0].lower():
+                datos["correo"] = textos[1]
 
-            # 🔥 manejo normal
-            valor = row.cells[1].text.strip()
+            # 🔥 CARGO + TELEFONO (fila de 4 columnas)
+            if len(cells) >= 4:
+                if "cargo" in textos[0].lower():
+                    datos["cargo"] = textos[1]
 
-            if not valor:
-                continue
+                if "tel" in textos[2].lower():
+                    datos["telefono"] = textos[3].replace(" ", "")
 
-            if "contacto" in label:
-                datos["nombre"] = limpiar_nombre(valor)
-
-            elif "compañ" in label or "edificio" in label:
-                datos["compania"] = valor.upper()
-
-            elif "mail" in label:
-                datos["correo"] = valor
-
-            elif "ciudad" in label:
-                datos["ciudad"] = valor
+            # 🔥 CIUDAD
+            if len(cells) >= 2 and "ciudad" in textos[0].lower():
+                datos["ciudad"] = textos[1]
 
     # fallback ciudad
     if not datos["ciudad"]:
