@@ -131,20 +131,23 @@ def tratamiento(nombre, cargo):
 # =========================
 
 def reemplazar(doc, contexto):
-    for p in doc.paragraphs:
-        texto = p.text
-        for k, v in contexto.items():
-            texto = texto.replace(f"{{{{{k}}}}}", str(v))
-        p.text = texto
+    def reemplazar_en_runs(paragraph):
+        for run in paragraph.runs:
+            texto = run.text
+            for k, v in contexto.items():
+                texto = texto.replace(f"{{{{{k}}}}}", str(v))
+            run.text = texto
 
+    # Párrafos normales
+    for p in doc.paragraphs:
+        reemplazar_en_runs(p)
+
+    # Tablas
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
-                texto = cell.text
-                for k, v in contexto.items():
-                    texto = texto.replace(f"{{{{{k}}}}}", str(v))
-                cell.text = texto
-
+                for p in cell.paragraphs:
+                    reemplazar_en_runs(p)
 # =========================
 # 🚀 ENDPOINT
 # =========================
