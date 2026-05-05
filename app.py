@@ -42,7 +42,32 @@ def fecha_es():
     ]
     hoy = datetime.now()
     return f"{hoy.day} de {meses[hoy.month-1]} de {hoy.year}"
+# =========================
+# VALIDAR NOMBRE
+# =========================
+def es_nombre_valido(texto):
+    palabras = texto.split()
 
+    if len(palabras) < 2:
+        return False
+
+    bloqueados = [
+        "LEVANTAMIENTO",
+        "NECESIDADES",
+        "PROPUESTA",
+        "SERVICIO",
+        "VIGILANCIA",
+        "SEGURIDAD"
+    ]
+
+    for b in bloqueados:
+        if b in texto:
+            return False
+
+    if not texto.isupper():
+        return False
+
+    return True
 # =========================
 # EXTRAER DATOS TABLA
 # =========================
@@ -75,7 +100,23 @@ def extraer_datos(doc):
     # NOMBRE → línea en mayúsculas
     # =====================
     for l in lineas:
-        if l.isupper() and len(l.split()) >= 3:
+
+        # PRIORIDAD 1: con SR / DOCTOR
+        if "SR." in l.upper() or "SEÑOR" in l.upper() or "DOCTOR" in l.upper():
+            limpio = (
+                l.upper()
+                .replace("SR.", "")
+                .replace("SEÑOR", "")
+                .replace("DOCTOR", "")
+                .strip()
+            )
+    
+            if es_nombre_valido(limpio):
+                datos["nombre"] = limpio
+                break
+    
+        # PRIORIDAD 2: línea en mayúsculas válida
+        if es_nombre_valido(l):
             datos["nombre"] = l
             break
 
@@ -101,9 +142,7 @@ def extraer_datos(doc):
     # =====================
     for l in lineas:
         if "COLOMBIA" in l.upper():
-            ciudad = l.replace(", Colombia", "").strip()
-            datos["ciudad"] = ciudad
-            break
+            datos["ciudad"] = l.replace(", Colombia", "").strip()
 
     # =====================
     # CORREO
