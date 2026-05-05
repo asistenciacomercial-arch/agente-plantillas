@@ -81,23 +81,44 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
-    # 👉 TABLA REAL DEL LEVANTAMIENTO (SIEMPRE LA MISMA)
-    tabla = doc.tables[0]
+    for table in doc.tables:
+        for row in table.rows:
+            if len(row.cells) < 2:
+                continue
 
-    try:
-        # 👇 ESTO ES LO CLAVE (COORDENADAS FIJAS)
+            label = row.cells[0].text.strip().lower()
+            value = row.cells[1].text.strip()
 
-        datos["nombre"] = limpiar_nombre(tabla.rows[1].cells[1].text.strip())
-        datos["cargo"] = tabla.rows[2].cells[1].text.strip()
-        datos["compania"] = tabla.rows[3].cells[1].text.strip().upper()
-        datos["correo"] = tabla.rows[4].cells[1].text.strip()
-        datos["telefono"] = tabla.rows[5].cells[1].text.strip().replace(" ", "")
-        datos["ciudad"] = tabla.rows[6].cells[1].text.strip()
+            if not value:
+                continue
 
-    except Exception as e:
-        print("ERROR LEYENDO TABLA:", e)
+            # 🔥 MAPEO EXACTO
+            if "cliente" in label or "contacto" in label:
+                datos["nombre"] = limpiar_nombre(value)
 
-    # fallback mínimo
+            elif "cargo" in label:
+                datos["cargo"] = value
+
+            elif "empresa" in label or "edificio" in label:
+                datos["compania"] = value.upper()
+
+            elif "correo" in label or "mail" in label:
+                datos["correo"] = value
+
+            elif "tel" in label:
+                datos["telefono"] = value.replace(" ", "")
+
+            elif "ciudad" in label:
+                datos["ciudad"] = value
+
+    # fallback ciudad (por si viene abajo)
+    if not datos["ciudad"]:
+        for p in doc.paragraphs:
+            t = p.text.strip()
+            if "Colombia" in t:
+                datos["ciudad"] = t.replace(", Colombia", "").strip()
+
+    # fallback nombre
     if not datos["nombre"]:
         datos["nombre"] = "CLIENTE"
 
