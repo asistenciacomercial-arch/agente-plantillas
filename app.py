@@ -41,42 +41,40 @@ def extraer_datos(doc):
 
     for table in doc.tables:
         for row in table.rows:
-            cells = [c.text.strip() for c in row.cells if c.text.strip()]
+            cells = [c.text.strip() for c in row.cells]
 
-            # ⚠️ SI NO HAY SUFICIENTES CELDAS → SALTA
+            # Solo filas tipo clave → valor
             if len(cells) < 2:
                 continue
 
-            texto_fila = " ".join(cells).lower()
+            clave = cells[0].lower().strip()
+            valor = cells[1].strip()
 
-            try:
-                if "contacto" in texto_fila:
-                    datos["nombre"] = limpiar_nombre(cells[-1])
+            # 🔥 MAPEO EXACTO (NO ambiguo)
 
-                elif "cargo" in texto_fila:
-                    datos["cargo"] = cells[-1]
+            if clave == "contacto":
+                datos["nombre"] = limpiar_nombre(valor)
 
-                elif "compañía" in texto_fila:
-                    datos["compania"] = cells[-1].upper()
+            elif clave == "cargo":
+                datos["cargo"] = valor
 
-                elif "teléfono" in texto_fila:
-                    datos["telefono"] = cells[-1]
+            elif clave == "compañía":
+                datos["compania"] = valor.upper()
 
-                elif "ciudad" in texto_fila:
-                    datos["ciudad"] = cells[-1]
+            elif clave == "teléfono":
+                datos["telefono"] = valor
 
-                elif "mail" in texto_fila or "correo" in texto_fila:
-                    datos["correo"] = cells[-1]
+            elif clave == "ciudad - lugar":
+                datos["ciudad"] = valor
 
-                elif "tipo de servicio" in texto_fila:
-                    datos["servicio"] = cells[-1].lower()
+            elif clave in ["e- mail", "e-mail", "correo"]:
+                datos["correo"] = valor
 
-                elif "tiempo de servicio" in texto_fila:
-                    datos["modalidad"] = cells[-1].lower()
+            elif clave == "tipo de servicio":
+                datos["servicio"] = valor.lower()
 
-            except Exception:
-                # evita que una fila dañada tumbe todo
-                continue
+            elif clave == "tiempo de servicio":
+                datos["modalidad"] = valor.lower()
 
     return datos
 # ----------------------------
