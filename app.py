@@ -82,97 +82,52 @@ def extraer_datos(doc):
     }
 
     # =========================
-    # 1. TABLA PRINCIPAL (CONTACTO)
+    # TABLA PRINCIPAL (FIJA)
     # =========================
-    if doc.tables:
-        tabla = doc.tables[0]  # la primera tabla siempre es contacto
+    tabla = doc.tables[0]
 
-        for row in tabla.rows:
-            celdas = [c.text.strip() for c in row.cells]
+    for row in tabla.rows:
+        label = row.cells[0].text.strip().lower()
+        value = row.cells[1].text.strip()
 
-            if len(celdas) < 2:
-                continue
+        if not value:
+            continue
 
-            campo = celdas[0].lower()
-            valor = celdas[1].strip()
+        # 👇 EXACTO SEGÚN TU FORMATO
+        if "cliente" in label or "contacto" in label:
+            datos["nombre"] = limpiar_nombre(value)
 
-            if not valor:
-                continue
+        elif "cargo" in label:
+            datos["cargo"] = value
 
-            if "cliente" in campo or "contacto" in campo:
-                datos["nombre"] = limpiar_nombre(valor)
+        elif "empresa" in label or "compañ" in label or "edificio" in label:
+            datos["compania"] = value.upper()
 
-            elif "cargo" in campo:
-                datos["cargo"] = valor
+        elif "mail" in label or "correo" in label:
+            datos["correo"] = value
 
-            elif "mail" in campo or "correo" in campo:
-                datos["correo"] = valor
+        elif "tel" in label or "cel" in label:
+            datos["telefono"] = value.replace(" ", "")
 
-            elif "tel" in campo or "cel" in campo:
-                datos["telefono"] = valor
-
-            elif "empresa" in campo or "compañ" in campo or "edificio" in campo:
-                datos["compania"] = valor.upper()
+        elif "ciudad" in label:
+            datos["ciudad"] = value
 
     # =========================
-    # 2. SEGUNDA TABLA (SI EXISTE)
+    # RESPALDO (por si ciudad viene abajo)
     # =========================
-    if len(doc.tables) > 1:
-        tabla2 = doc.tables[1]
-
-        for row in tabla2.rows:
-            texto = " ".join([c.text.strip() for c in row.cells]).upper()
-
-            if "COLOMBIA" in texto:
-                datos["ciudad"] = texto.replace(", COLOMBIA", "").strip()
+    if not datos["ciudad"]:
+        for p in doc.paragraphs:
+            t = p.text.strip()
+            if "Colombia" in t:
+                datos["ciudad"] = t.replace(", Colombia", "").strip()
 
     # =========================
-    # 3. PÁRRAFOS (RESPALDO REAL)
-    # =========================
-    for p in doc.paragraphs:
-        t = p.text.strip()
-        t_up = t.upper()
-
-        # ciudad
-        if not datos["ciudad"] and "COLOMBIA" in t_up:
-            datos["ciudad"] = t.replace(", Colombia", "").strip()
-
-        # teléfono (línea sola con números)
-        if not datos["telefono"]:
-            if t.isdigit() and len(t) >= 7:
-                datos["telefono"] = t
-
-        # compañía (EDIFICIO ...)
-        if not datos["compania"] and "EDIFICIO" in t_up:
-            datos["compania"] = t_up
-    # =====================
-    # CARGO (desde texto real)
-    # =====================
-    for p in doc.paragraphs:
-        t = p.text.strip()
-        t_low = t.lower()
-    
-        if not datos["cargo"]:
-            if any(x in t_low for x in [
-                "gerente",
-                "director",
-                "presidente",
-                "administrador",
-                "coordinador"
-            ]):
-                datos["cargo"] = t
-       
-    # =========================
-    # 4. LIMPIEZA FINAL
+    # LIMPIEZA FINAL
     # =========================
     if not datos["nombre"]:
         datos["nombre"] = "CLIENTE"
 
-    if not datos["ciudad"]:
-        datos["ciudad"] = "Bogotá"
-
     return datos
-    
 # =========================
 # DETECTAR SERVICIO (CLAVE)
 # =========================
