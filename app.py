@@ -176,17 +176,22 @@ def reemplazar(doc, contexto):
     alias = {
         "fecha": contexto.get("fecha completa actual", ""),
         "fecha completa actual": contexto.get("fecha completa actual", ""),
+
         "Cargo": contexto.get("cargo", ""),
         "cargo": contexto.get("cargo", ""),
+
         "nombre": contexto.get("nombre", ""),
         "Nombre": contexto.get("nombre", ""),
+
         "correo": contexto.get("correo", ""),
         "telefono": contexto.get("telefono", ""),
         "ciudad": contexto.get("ciudad", ""),
         "compania": contexto.get("compania", ""),
         "alcance": contexto.get("alcance", ""),
         "consecutivo": contexto.get("consecutivo", ""),
-        "saludo": f"{contexto.get('tratamiento','')} {contexto.get('nombre_corto','')}"
+
+        "tratamiento": contexto.get("tratamiento", ""),
+        "saludo": f"{contexto.get('tratamiento','')} {contexto.get('nombre_corto','')}",
     }
 
     def reemplazar_texto(texto):
@@ -194,16 +199,26 @@ def reemplazar(doc, contexto):
             texto = texto.replace(f"{{{{{k}}}}}", str(v))
         return texto
 
+    # 🔹 PÁRRAFOS (CLAVE)
     for p in doc.paragraphs:
-        for run in p.runs:
-            run.text = reemplazar_texto(run.text)
+        texto_original = p.text
+        texto_nuevo = reemplazar_texto(texto_original)
 
+        if texto_original != texto_nuevo:
+            p.clear()  # borra runs pero mantiene formato general
+            p.add_run(texto_nuevo)
+
+    # 🔹 TABLAS
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
-                    for run in p.runs:
-                        run.text = reemplazar_texto(run.text)
+                    texto_original = p.text
+                    texto_nuevo = reemplazar_texto(texto_original)
+
+                    if texto_original != texto_nuevo:
+                        p.clear()
+                        p.add_run(texto_nuevo)
 
 # =========================
 # 🚀 ENDPOINT
