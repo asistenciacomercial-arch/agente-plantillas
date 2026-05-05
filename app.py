@@ -1,275 +1,133 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
-from docxtpl import DocxTemplate
 from docx import Document
+from docxtpl import DocxTemplate
 import shutil
 import os
 from datetime import datetime
 
 app = FastAPI()
 
-# ------------------------
-# UTILIDADES
-# ------------------------
+# ----------------------------
+# FORMATEOS
+# ----------------------------
 
-def obtener_fecha():
-    meses = {
-        "January": "enero", "February": "febrero", "March": "marzo",
-        "April": "abril", "May": "mayo", "June": "junio",
-        "July": "julio", "August": "agosto", "September": "septiembre",
-        "October": "octubre", "November": "noviembre", "December": "diciembre"
-    }
+def fecha_espanol():
+    meses = [
+        "enero","febrero","marzo","abril","mayo","junio",
+        "julio","agosto","septiembre","octubre","noviembre","diciembre"
+    ]
     now = datetime.now()
-    mes = meses[now.strftime("%B")]
-    return f"{now.day} de {mes} de {now.year}"
+    return f"{now.day} de {meses[now.month-1]} de {now.year}"
 
+def limpiar_nombre(nombre):
+    nombre = nombre.replace("Sr.", "").replace("Sra.", "").strip()
+    return nombre
 
 def primer_nombre(nombre):
     return nombre.split()[0].capitalize()
 
-
-def obtener_tratamiento(nombre, cargo):
+def determinar_tratamiento(nombre, cargo):
     cargo = cargo.lower()
-
-    if "gerente" in cargo or "director" in cargo:
+    if "gerente" in cargo or "director" in cargo or "presidente" in cargo:
         return "Doctor"
-
-    if nombre.strip().endswith("a"):
-        return "Señora"
-
     return "Señor"
 
+# ----------------------------
+# EXTRACCIÓN DE DATOS
+# ----------------------------
 
-def obtener_consecutivo():
-    return datetime.now().strftime("%Y%m%d%H%M")
-
-
-# ------------------------
-# EXTRAER DATOS
-# ------------------------
-
-def extraer_datos_tabla(doc):
-    data = {
-        "nombre": "",
-        "cargo": "",
-        "compania": "",
-        "correo": "",
-        "telefono": "",
-        "ciudad": "",
-        "servicio": "",
-        "texto_completo": ""
-    }
-
-    texto_total = []
+def extraer_datos(doc):
+    datos = {}
 
     for table in doc.tables:
         for row in table.rows:
             cells = [c.text.strip() for c in row.cells]
 
-            texto_total.extend(cells)
+            if len(cells) >= 2:
+                key = cells[0].lower()
+                value = cells[1]
 
-            if len(cells) < 2:
-                continue
+                if "contacto" in key:
+                    datos["nombre"] = limpiar_nombre(value)
 
-            key = cells[0].lower()
-            value = cells[1]
+                elif "cargo" in key:
+                    datos["cargo"] = value
 
-            if "contacto" in key:
-                data["nombre"] = value
+                elif "compañía" in key:
+                    datos["compania"] = value.upper()
 
-            elif "cargo" in key:
-                data["cargo"] = value
+                elif "teléfono" in key:
+                    datos["telefono"] = value
 
-            elif "compañ" in key:
-                data["compania"] = value
+                elif "ciudad" in key:
+                    datos["ciudad"] = value
 
-            elif "mail" in key or "correo" in key:
-                data["correo"] = value
+                elif "e- mail" in key:
+                    datos["correo"] = value
 
-            elif "tel" in key:
-                data["telefono"] = value
+                elif "tipo de servicio" in key:
+                    datos["servicio"] = value.lower()
 
-            elif "ciudad" in key:
-                data["ciudad"] = value
+                elif "tiempo de servicio" in key:
+                    datos["modalidad"] = value.lower()
 
-            elif "servicio" in key:
-                data["servicio"] = value
+    return datos
 
-    data["texto_completo"] = " ".join(texto_total).lower()
+# ----------------------------
+# DETECCIÓN AVANZADA
+# ----------------------------
 
-    return data
+def detectar_subtipo_y_flags(doc):
+    texto = "\n".join([p.text.lower() for p in doc.paragraphs])
 
+    resultado = {
+        "arma": "sin_arma",
+        "fortalecimiento": False
+    }
 
-# ------------------------
-# DETECTAR SERVICIO POR TABLA (X)
-# ------------------------
+    if "arma" in texto:
+        resultado["arma"] = "armada"
 
-def detectar_servicio_desde_tabla(doc):
-    for table in doc.tables:
-        for row in table.rows:
-            cells = [c.text.strip().lower() for c in row.cells]
+    if "fortalecimiento" in texto:
+        resultado["fortalecimiento"] = True
 
-            if len(cells) < 2:
-                continue
+    return resultado
 
-            servicio = cells[0]
-            marca = cells[1]
+# ----------------------------
+# MAPEO DE PLANTILLAS REAL
+# ----------------------------
 
-            if "x" in marca:
+def seleccionar_plantilla(datos, extra):
+    servicio = datos.get("servicio", "")
 
-                if "vigilancia" in servicio:
-                    return "vigilancia"
+    if "vigilancia" in servicio:
+        arma = extra["arma"]
+        modalidad = "m" if "mensual" in datos.get("modalidad","") else "e"
+        f = "_f" if extra["fortalecimiento"] else ""
 
-                elif "escolta" in servicio:
-                    return "escolta"
+        return f"plantillas/vigilancia_{arma}_{modalidad}{f}.docx"
 
-                elif "monitoreo" in servicio:
-                    return "monitoreo"
+    if "escolta" in servicio:
+        return "plantillas/escolta_mensual.docx"
 
-                elif "electronica" in servicio:
-                    return "seguridad_electronica"
+    if "confiabilidad" in servicio:
+        return "plantillas/confiabilidad.docx"
 
-                elif "confiabilidad" in servicio:
-                    return "confiabilidad"
+    if "monitoreo" in servicio:
+        return "plantillas/monitoreo.docx"
 
-                elif "eventos" in servicio:
-                    return "seguridad_eventos"
+    if "electronica" in servicio:
+        return "plantillas/seguridad_electronica.docx"
+
+    if "eventos" in servicio:
+        return "plantillas/seguridad_en_eventos.docx"
 
     return None
 
-
-# ------------------------
-# DETECTAR SUBTIPO (TEXTO)
-# ------------------------
-
-def detectar_subtipo(data):
-    texto = data["texto_completo"]
-
-    subtipo = ""
-
-    if "sin arma" in texto:
-        subtipo = "sin_arma"
-
-    elif "arma" in texto:
-        subtipo = "armada"
-
-    if "motorizado" in texto:
-        subtipo = "motorizado"
-
-    elif "conductor" in texto:
-        subtipo = "conductor"
-
-    elif "a pie" in texto:
-        subtipo = "a_pie"
-
-    if "12" in texto:
-        subtipo += "_12h"
-
-    return subtipo
-
-
-# ------------------------
-# SELECCIONAR PLANTILLA
-# ------------------------
-
-def seleccionar_plantilla(servicio_base, subtipo, data):
-    texto = data["texto_completo"]
-
-    # VIGILANCIA
-    if servicio_base == "vigilancia":
-
-        if "sin_arma" in subtipo:
-
-            if "mensual" in texto and "fortalecimiento" in texto:
-                return "plantillas/vigilancia_sin_arma_f_m.docx"
-
-            elif "mensual" in texto:
-                return "plantillas/vigilancia_sin_arma_m.docx"
-
-            else:
-                return "plantillas/vigilancia_sin_arma_e_12h.docx"
-
-        else:
-
-            if "mensual" in texto and "fortalecimiento" in texto:
-                return "plantillas/vigilancia_armada_m_f.docx"
-
-            elif "mensual" in texto:
-                return "plantillas/vigilancia_armada_m.docx"
-
-            else:
-                return "plantillas/vigilancia_armada_e.docx"
-
-    # ESCOLTA
-    elif servicio_base == "escolta":
-
-        if "motorizado" in subtipo:
-            return "plantillas/escolta_motorizado.docx"
-
-        elif "conductor" in subtipo:
-            return "plantillas/escolta_conductor_ev.docx"
-
-        elif "mensual" in texto:
-            return "plantillas/escolta_mensual.docx"
-
-        else:
-            return "plantillas/escolta_a_pie.docx"
-
-    # OTROS
-    elif servicio_base == "monitoreo":
-        return "plantillas/monitoreo.docx"
-
-    elif servicio_base == "seguridad_eventos":
-        return "plantillas/seguridad_en_eventos.docx"
-
-    elif servicio_base == "seguridad_electronica":
-        return "plantillas/seguridad_electronica.docx"
-
-    elif servicio_base == "confiabilidad":
-        return "plantillas/confiabilidad.docx"
-
-    return "plantillas/monitoreo.docx"
-
-
-# ------------------------
-# ALCANCE DINÁMICO
-# ------------------------
-
-def generar_alcance(servicio_base, subtipo):
-
-    if servicio_base == "vigilancia":
-
-        if "sin_arma" in subtipo:
-            return "Servicio de vigilancia sin arma con control de accesos y prevención de riesgos."
-
-        else:
-            return "Servicio de vigilancia armada con control de accesos y reacción ante incidentes."
-
-    elif servicio_base == "escolta":
-
-        if "motorizado" in subtipo:
-            return "Servicio de escolta motorizado con reacción inmediata."
-
-        elif "conductor" in subtipo:
-            return "Servicio de escolta conductor con protección en desplazamientos."
-
-        else:
-            return "Servicio de escolta a pie."
-
-    elif servicio_base == "monitoreo":
-        return "Servicio de monitoreo electrónico."
-
-    return "Servicio ajustado a las necesidades del cliente."
-
-
-# ------------------------
-# API
-# ------------------------
-
-@app.get("/")
-def home():
-    return {"status": "ok"}
-
+# ----------------------------
+# ENDPOINT
+# ----------------------------
 
 @app.post("/procesar/")
 async def procesar(file: UploadFile = File(...)):
@@ -282,47 +140,35 @@ async def procesar(file: UploadFile = File(...)):
 
         doc = Document(temp_path)
 
-        data = extraer_datos_tabla(doc)
+        datos = extraer_datos(doc)
+        extra = detectar_subtipo_y_flags(doc)
 
-        servicio_base = detectar_servicio_desde_tabla(doc)
+        plantilla = seleccionar_plantilla(datos, extra)
 
-        if not servicio_base:
-            return {"error": "No se detectó servicio en la tabla (X)"}
+        if not plantilla or not os.path.exists(plantilla):
+            return {"error": f"No existe plantilla: {plantilla}"}
 
-        subtipo = detectar_subtipo(data)
+        tratamiento = determinar_tratamiento(datos["nombre"], datos["cargo"])
 
-        plantilla = seleccionar_plantilla(servicio_base, subtipo, data)
-
-        if not os.path.exists(plantilla):
-            return {"error": f"No existe la plantilla: {plantilla}"}
-
-        alcance = generar_alcance(servicio_base, subtipo)
-
-        context = {
-            "consecutivo": obtener_consecutivo(),
-            "fecha": obtener_fecha(),
-
-            "tratamiento": obtener_tratamiento(data["nombre"], data["cargo"]),
-
-            "nombre": data["nombre"].upper(),
-            "nombre_simple": primer_nombre(data["nombre"]),
-
-            "cargo": data["cargo"],
-            "compania": data["compania"].upper(),
-
-            "correo": data["correo"],
-            "telefono": data["telefono"],
-            "ciudad": data["ciudad"],
-
-            "alcance": alcance
+        contexto = {
+            "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
+            "fecha": fecha_espanol(),
+            "tratamiento": tratamiento,
+            "nombre": datos["nombre"].upper(),
+            "nombre_simple": primer_nombre(datos["nombre"]),
+            "cargo": datos["cargo"],
+            "compania": datos["compania"],
+            "correo": datos.get("correo",""),
+            "telefono": datos.get("telefono",""),
+            "ciudad": datos.get("ciudad","")
         }
 
-        doc_tpl = DocxTemplate(plantilla)
-        doc_tpl.render(context)
-        doc_tpl.save(output_path)
+        doc = DocxTemplate(plantilla)
+        doc.render(contexto)
+        doc.save(output_path)
 
         return FileResponse(
-            path=output_path,
+            output_path,
             filename="resultado.docx",
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
