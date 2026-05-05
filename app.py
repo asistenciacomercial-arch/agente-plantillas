@@ -56,12 +56,17 @@ def extraer_datos_tabla(doc):
         "correo": "",
         "telefono": "",
         "ciudad": "",
-        "servicio": ""
+        "servicio": "",
+        "texto_completo": ""
     }
+
+    texto_total = []
 
     for table in doc.tables:
         for row in table.rows:
             cells = [c.text.strip() for c in row.cells]
+
+            texto_total.extend(cells)
 
             if len(cells) < 2:
                 continue
@@ -87,92 +92,172 @@ def extraer_datos_tabla(doc):
             elif "ciudad" in key:
                 data["ciudad"] = value
 
-            elif "servicio" in key or "tipo" in key:
+            elif "servicio" in key:
                 data["servicio"] = value
+
+    data["texto_completo"] = " ".join(texto_total).lower()
 
     return data
 
 
 # ------------------------
-# DETECTAR SERVICIO COMPLETO
+# DETECTAR SERVICIO POR TABLA (X)
 # ------------------------
 
-def detectar_servicio_completo(data):
-    texto = data["servicio"].lower()
+def detectar_servicio_desde_tabla(doc):
+    for table in doc.tables:
+        for row in table.rows:
+            cells = [c.text.strip().lower() for c in row.cells]
 
-    if "vigilancia" in texto:
-        if "sin arma" in texto:
-            return "vigilancia_sin_arma"
-        elif "arma" in texto:
-            return "vigilancia_armada"
+            if len(cells) < 2:
+                continue
+
+            servicio = cells[0]
+            marca = cells[1]
+
+            if "x" in marca:
+
+                if "vigilancia" in servicio:
+                    return "vigilancia"
+
+                elif "escolta" in servicio:
+                    return "escolta"
+
+                elif "monitoreo" in servicio:
+                    return "monitoreo"
+
+                elif "electronica" in servicio:
+                    return "seguridad_electronica"
+
+                elif "confiabilidad" in servicio:
+                    return "confiabilidad"
+
+                elif "eventos" in servicio:
+                    return "seguridad_eventos"
+
+    return None
+
+
+# ------------------------
+# DETECTAR SUBTIPO (TEXTO)
+# ------------------------
+
+def detectar_subtipo(data):
+    texto = data["texto_completo"]
+
+    subtipo = ""
+
+    if "sin arma" in texto:
+        subtipo = "sin_arma"
+
+    elif "arma" in texto:
+        subtipo = "armada"
+
+    if "motorizado" in texto:
+        subtipo = "motorizado"
+
+    elif "conductor" in texto:
+        subtipo = "conductor"
+
+    elif "a pie" in texto:
+        subtipo = "a_pie"
+
+    if "12" in texto:
+        subtipo += "_12h"
+
+    return subtipo
+
+
+# ------------------------
+# SELECCIONAR PLANTILLA
+# ------------------------
+
+def seleccionar_plantilla(servicio_base, subtipo, data):
+    texto = data["texto_completo"]
+
+    # VIGILANCIA
+    if servicio_base == "vigilancia":
+
+        if "sin_arma" in subtipo:
+
+            if "mensual" in texto and "fortalecimiento" in texto:
+                return "plantillas/vigilancia_sin_arma_f_m.docx"
+
+            elif "mensual" in texto:
+                return "plantillas/vigilancia_sin_arma_m.docx"
+
+            else:
+                return "plantillas/vigilancia_sin_arma_e_12h.docx"
+
         else:
-            return "vigilancia"
 
-    elif "escolta" in texto:
-        if "motorizado" in texto:
-            return "escolta_motorizado"
-        elif "conductor" in texto:
-            return "escolta_conductor"
+            if "mensual" in texto and "fortalecimiento" in texto:
+                return "plantillas/vigilancia_armada_m_f.docx"
+
+            elif "mensual" in texto:
+                return "plantillas/vigilancia_armada_m.docx"
+
+            else:
+                return "plantillas/vigilancia_armada_e.docx"
+
+    # ESCOLTA
+    elif servicio_base == "escolta":
+
+        if "motorizado" in subtipo:
+            return "plantillas/escolta_motorizado.docx"
+
+        elif "conductor" in subtipo:
+            return "plantillas/escolta_conductor_ev.docx"
+
+        elif "mensual" in texto:
+            return "plantillas/escolta_mensual.docx"
+
         else:
-            return "escolta_a_pie"
+            return "plantillas/escolta_a_pie.docx"
 
-    elif "monitoreo" in texto:
-        return "monitoreo"
+    # OTROS
+    elif servicio_base == "monitoreo":
+        return "plantillas/monitoreo.docx"
 
-    elif "ciber" in texto:
-        return "ciberseguridad"
+    elif servicio_base == "seguridad_eventos":
+        return "plantillas/seguridad_en_eventos.docx"
 
-    return "general"
+    elif servicio_base == "seguridad_electronica":
+        return "plantillas/seguridad_electronica.docx"
 
+    elif servicio_base == "confiabilidad":
+        return "plantillas/confiabilidad.docx"
 
-# ------------------------
-# PLANTILLA BASE
-# ------------------------
-
-def seleccionar_plantilla_por_tipo(data):
-    texto = data["servicio"].lower()
-
-    if "mensual" in texto:
-        return "plantillas/base_m.docx"
-
-    elif "eventual" in texto or "día" in texto:
-        return "plantillas/base_e.docx"
-
-    elif "fortalecimiento" in texto:
-        return "plantillas/base_f.docx"
-
-    elif "valor agregado" in texto:
-        return "plantillas/base_av.docx"
-
-    return "plantillas/base_e.docx"
+    return "plantillas/monitoreo.docx"
 
 
 # ------------------------
-# ALCANCE
+# ALCANCE DINÁMICO
 # ------------------------
 
-def generar_alcance(servicio):
+def generar_alcance(servicio_base, subtipo):
 
-    if servicio == "vigilancia_armada":
-        return "Servicio de vigilancia armada con control de accesos, rondas de seguridad y reacción ante incidentes."
+    if servicio_base == "vigilancia":
 
-    elif servicio == "vigilancia_sin_arma":
-        return "Servicio de vigilancia sin arma enfocado en control de accesos y prevención de riesgos."
+        if "sin_arma" in subtipo:
+            return "Servicio de vigilancia sin arma con control de accesos y prevención de riesgos."
 
-    elif servicio == "escolta_motorizado":
-        return "Servicio de escolta motorizado con reacción inmediata y cobertura en desplazamientos."
+        else:
+            return "Servicio de vigilancia armada con control de accesos y reacción ante incidentes."
 
-    elif servicio == "escolta_conductor":
-        return "Servicio de escolta conductor con protección y conducción segura."
+    elif servicio_base == "escolta":
 
-    elif servicio == "escolta_a_pie":
-        return "Servicio de escolta a pie para protección directa del cliente."
+        if "motorizado" in subtipo:
+            return "Servicio de escolta motorizado con reacción inmediata."
 
-    elif servicio == "monitoreo":
-        return "Servicio de monitoreo electrónico con respuesta ante eventos."
+        elif "conductor" in subtipo:
+            return "Servicio de escolta conductor con protección en desplazamientos."
 
-    elif servicio == "ciberseguridad":
-        return "Capacitación en ciberseguridad preventiva."
+        else:
+            return "Servicio de escolta a pie."
+
+    elif servicio_base == "monitoreo":
+        return "Servicio de monitoreo electrónico."
 
     return "Servicio ajustado a las necesidades del cliente."
 
@@ -199,12 +284,19 @@ async def procesar(file: UploadFile = File(...)):
 
         data = extraer_datos_tabla(doc)
 
-        servicio = detectar_servicio_completo(data)
-        plantilla = seleccionar_plantilla_por_tipo(data)
-        alcance = generar_alcance(servicio)
+        servicio_base = detectar_servicio_desde_tabla(doc)
 
-        nombre = data["nombre"].upper()
-        nombre_simple_val = primer_nombre(data["nombre"])
+        if not servicio_base:
+            return {"error": "No se detectó servicio en la tabla (X)"}
+
+        subtipo = detectar_subtipo(data)
+
+        plantilla = seleccionar_plantilla(servicio_base, subtipo, data)
+
+        if not os.path.exists(plantilla):
+            return {"error": f"No existe la plantilla: {plantilla}"}
+
+        alcance = generar_alcance(servicio_base, subtipo)
 
         context = {
             "consecutivo": obtener_consecutivo(),
@@ -212,8 +304,8 @@ async def procesar(file: UploadFile = File(...)):
 
             "tratamiento": obtener_tratamiento(data["nombre"], data["cargo"]),
 
-            "nombre": nombre,
-            "nombre_simple": nombre_simple_val,
+            "nombre": data["nombre"].upper(),
+            "nombre_simple": primer_nombre(data["nombre"]),
 
             "cargo": data["cargo"],
             "compania": data["compania"].upper(),
@@ -225,9 +317,9 @@ async def procesar(file: UploadFile = File(...)):
             "alcance": alcance
         }
 
-        doc = DocxTemplate(plantilla)
-        doc.render(context)
-        doc.save(output_path)
+        doc_tpl = DocxTemplate(plantilla)
+        doc_tpl.render(context)
+        doc_tpl.save(output_path)
 
         return FileResponse(
             path=output_path,
