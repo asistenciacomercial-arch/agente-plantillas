@@ -82,64 +82,96 @@ def extraer_datos(doc):
     }
 
     # =====================
-    # 1. TABLAS
+    # 1. EXTRAER DESDE TABLAS (FORMATO REAL)
     # =====================
     for table in doc.tables:
         for row in table.rows:
-            celdas = [c.text.strip() for c in row.cells]
+            celdas = [c.text.strip() for c in row.cells if c.text.strip()]
 
-            for i in range(0, len(celdas) - 1):
+            if len(celdas) < 2:
+                continue
+
+            texto_row = " ".join(celdas).lower()
+
+            for i in range(len(celdas) - 1):
                 campo = celdas[i].lower()
                 valor = celdas[i + 1].strip()
 
                 if not valor:
                     continue
 
+                # 🔹 nombre
                 if "cliente" in campo or "contacto" in campo:
                     datos["nombre"] = limpiar_nombre(valor)
 
+                # 🔹 cargo
                 elif "cargo" in campo:
                     datos["cargo"] = valor
 
+                # 🔹 empresa
                 elif "compañ" in campo or "empresa" in campo:
                     datos["compania"] = valor.upper()
 
+                # 🔹 correo
                 elif "mail" in campo or "correo" in campo:
                     datos["correo"] = valor
 
+                # 🔹 teléfono
                 elif "tel" in campo or "cel" in campo:
                     datos["telefono"] = valor
 
+                # 🔹 ciudad
                 elif "ciudad" in campo:
                     datos["ciudad"] = valor
 
     # =====================
-    # 2. PÁRRAFOS (CLAVE)
+    # 2. EXTRAER DESDE TEXTO (RESPALDO)
     # =====================
     lineas = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
 
     for l in lineas:
         l_up = l.upper()
 
-        # NOMBRE
+        # 🚫 ignorar bloques largos (descripciones)
+        if len(l.split()) > 8:
+            continue
+
+        # 🚫 ignorar frases típicas
+        if any(x in l_up for x in [
+            "PROPUESTA",
+            "REQUER",
+            "SERVICIO",
+            "VIGILANCIA",
+            "FORTALECIMIENTO",
+            "SEGURIDAD"
+        ]):
+            continue
+
+        # =====================
+        # NOMBRE (formato real: mayúscula, corto)
+        # =====================
         if not datos["nombre"]:
             if l.isupper() and 2 <= len(l.split()) <= 4:
-                if not any(x in l_up for x in ["PROPUESTA", "SERVICIO", "VIGILANCIA", "NECESIDADES"]):
-                    if "EDIFICIO" not in l_up:
-                        datos["nombre"] = limpiar_nombre(l)
+                if "EDIFICIO" not in l_up:
+                    datos["nombre"] = limpiar_nombre(l)
 
+        # =====================
         # TELÉFONO
+        # =====================
         if not datos["telefono"]:
             if any(char.isdigit() for char in l) and len(l) >= 7:
-                datos["telefono"] = l
+                if len(l) <= 15:
+                    datos["telefono"] = l
 
+        # =====================
         # CIUDAD
+        # =====================
         if not datos["ciudad"]:
             if "COLOMBIA" in l_up:
                 datos["ciudad"] = l.replace(", Colombia", "").strip()
 
     # =====================
-    # 3. FALLBACKS
+    # 3. LIMPIEZA FINAL
     # =====================
     if not datos["nombre"]:
         datos["nombre"] = "CLIENTE"
