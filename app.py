@@ -11,6 +11,48 @@ app = FastAPI()
 # =========================
 # 🔹 FUNCIONES AUXILIARES
 # =========================
+def extraer_datos_tabla(doc):
+    data = {
+        "nombre": "",
+        "cargo": "",
+        "compania": "",
+        "correo": "",
+        "telefono": "",
+        "ciudad": "",
+        "servicio": ""
+    }
+
+    for table in doc.tables:
+        for row in table.rows:
+            if len(row.cells) < 2:
+                continue
+
+            clave = row.cells[0].text.strip().lower()
+            valor = row.cells[1].text.strip()
+
+            if "contacto" in clave:
+                data["nombre"] = valor
+
+            elif "cargo" in clave:
+                data["cargo"] = valor
+
+            elif "compañía" in clave or "compania" in clave:
+                data["compania"] = valor
+
+            elif "mail" in clave or "correo" in clave:
+                data["correo"] = valor
+
+            elif "teléfono" in clave or "telefono" in clave:
+                data["telefono"] = valor
+
+            elif "ciudad" in clave:
+                data["ciudad"] = valor
+
+            elif "servicio" in clave:
+                data["servicio"] = valor
+
+    return data
+    
 def obtener_tratamiento(nombre, cargo):
     nombre = nombre.lower()
     cargo = cargo.lower()
