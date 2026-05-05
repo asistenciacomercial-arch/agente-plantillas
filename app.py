@@ -161,8 +161,7 @@ def extraer_datos(doc):
                 "coordinador"
             ]):
                 datos["cargo"] = t
-        if not datos["cargo"]:
-        datos["cargo"] = ""
+       
     # =========================
     # 4. LIMPIEZA FINAL
     # =========================
