@@ -51,48 +51,52 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
+    if not doc.tables:
+        return datos
+
     tabla = doc.tables[0]
 
     for row in tabla.rows:
         cells = [c.text.strip() for c in row.cells]
 
-        # 🔥 recorrer de 2 en 2 (clave total)
+        # 🔥 recorrer en pares (CLAVE)
         for i in range(0, len(cells), 2):
 
             if i + 1 >= len(cells):
                 continue
 
-            label = cells[i].lower()
+            label = cells[i].strip().lower()
             valor = cells[i + 1].strip()
 
-            if not valor:
+            if not label or not valor:
                 continue
 
-            # 🔥 NOMBRE
+            # 🔥 NORMALIZAR label (esto evita errores)
+            label = label.replace(":", "").strip()
+
+            # ========= MATCH EXACTO =========
             if "contacto" in label:
                 datos["nombre"] = limpiar_nombre(valor)
 
-            # 🔥 EMPRESA
-            elif "compañ" in label or "edificio" in label:
-                datos["compania"] = valor.upper()
-
-            # 🔥 CORREO
-            elif "mail" in label or "correo" in label:
-                datos["correo"] = valor
-
-            # 🔥 TELÉFONO
-            elif "tel" in label or "cel" in label:
-                datos["telefono"] = valor.replace(" ", "")
-
-            # 🔥 CARGO
             elif "cargo" in label:
                 datos["cargo"] = valor
 
-            # 🔥 CIUDAD
+            elif "compañ" in label or "empresa" in label or "edificio" in label:
+                datos["compania"] = valor.upper()
+
+            elif "mail" in label or "correo" in label:
+                datos["correo"] = valor
+
+            elif "tel" in label or "cel" in label:
+                datos["telefono"] = valor.replace(" ", "")
+
             elif "ciudad" in label:
                 datos["ciudad"] = valor
 
-    print("DATOS BIEN EXTRAIDOS:", datos)
+    # 🔥 DEBUG REAL (OBLIGATORIO)
+    print(">>> DATOS EXTRAIDOS >>>")
+    for k, v in datos.items():
+        print(k, ":", v)
 
     return datos
     
