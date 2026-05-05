@@ -81,65 +81,23 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
-    # =========================
-    # BUSCAR TABLA CORRECTA
-    # =========================
-    tabla_objetivo = None
+    # 👉 TABLA REAL DEL LEVANTAMIENTO (SIEMPRE LA MISMA)
+    tabla = doc.tables[0]
 
-    for table in doc.tables:
-        texto_tabla = " ".join(cell.text.lower() for row in table.rows for cell in row.cells)
+    try:
+        # 👇 ESTO ES LO CLAVE (COORDENADAS FIJAS)
 
-        if "correo" in texto_tabla or "mail" in texto_tabla:
-            tabla_objetivo = table
-            break
+        datos["nombre"] = limpiar_nombre(tabla.rows[1].cells[1].text.strip())
+        datos["cargo"] = tabla.rows[2].cells[1].text.strip()
+        datos["compania"] = tabla.rows[3].cells[1].text.strip().upper()
+        datos["correo"] = tabla.rows[4].cells[1].text.strip()
+        datos["telefono"] = tabla.rows[5].cells[1].text.strip().replace(" ", "")
+        datos["ciudad"] = tabla.rows[6].cells[1].text.strip()
 
-    if not tabla_objetivo:
-        print("⚠️ No se encontró tabla de contacto")
-        return datos
+    except Exception as e:
+        print("ERROR LEYENDO TABLA:", e)
 
-    # =========================
-    # EXTRAER DATOS
-    # =========================
-    for row in tabla_objetivo.rows:
-        if len(row.cells) < 2:
-            continue
-
-        label = row.cells[0].text.strip().lower()
-        value = row.cells[1].text.strip()
-
-        if not value:
-            continue
-
-        if "cliente" in label or "contacto" in label:
-            datos["nombre"] = limpiar_nombre(value)
-
-        elif "cargo" in label:
-            datos["cargo"] = value
-
-        elif "empresa" in label or "compañ" in label or "edificio" in label:
-            datos["compania"] = value.upper()
-
-        elif "mail" in label or "correo" in label:
-            datos["correo"] = value
-
-        elif "tel" in label or "cel" in label:
-            datos["telefono"] = value.replace(" ", "")
-
-        elif "ciudad" in label:
-            datos["ciudad"] = value
-
-    # =========================
-    # RESPALDO PARA CIUDAD
-    # =========================
-    if not datos["ciudad"]:
-        for p in doc.paragraphs:
-            t = p.text.strip()
-            if "Colombia" in t:
-                datos["ciudad"] = t.replace(", Colombia", "").strip()
-
-    # =========================
-    # FALLBACKS
-    # =========================
+    # fallback mínimo
     if not datos["nombre"]:
         datos["nombre"] = "CLIENTE"
 
