@@ -7,35 +7,28 @@ from datetime import datetime
 
 app = FastAPI()
 
-
 # =========================
 # 🧠 UTILIDADES
 # =========================
 
 def limpiar(texto):
-    return texto.strip().replace("\n", " ")
-
+    return (texto or "").strip().replace("\n", " ")
 
 def limpiar_nombre(nombre):
-    return nombre.replace("Sr.", "").replace("Sra.", "").replace("Dr.", "").strip()
-
+    return limpiar(nombre).replace("Sr.", "").replace("Sra.", "").replace("Dr.", "").strip()
 
 def primer_nombre(nombre):
-    return nombre.split()[0].capitalize()
-
+    return limpiar(nombre).split()[0].capitalize() if nombre else ""
 
 def obtener_tratamiento(nombre, cargo):
-    nombre = nombre.lower()
+    nombre = (nombre or "").lower()
     cargo = (cargo or "").lower()
 
-    if "gerente" in cargo or "director" in cargo or "doctor" in cargo:
+    if any(x in cargo for x in ["gerente", "director", "doctor"]):
         return "Doctor"
-
     if nombre.endswith("a"):
         return "Señora"
-
     return "Señor"
-
 
 def obtener_fecha():
     meses = {
@@ -44,18 +37,15 @@ def obtener_fecha():
         "July": "julio", "August": "agosto", "September": "septiembre",
         "October": "octubre", "November": "noviembre", "December": "diciembre"
     }
-
     now = datetime.now()
     mes = meses[now.strftime("%B")]
     return f"{now.day} de {mes} de {now.year}"
 
-
 def obtener_consecutivo():
     return datetime.now().strftime("%Y%m%d%H%M")
 
-
 # =========================
-# 🧠 EXTRACCIÓN INTELIGENTE
+# 🧠 EXTRACCIÓN DE DATOS
 # =========================
 
 def extraer_datos(doc):
@@ -68,41 +58,85 @@ def extraer_datos(doc):
             for i in range(len(cells)):
                 texto = cells[i].lower()
 
+                # CONTACTO → nombre
                 if "contacto" in texto and i+1 < len(cells):
                     datos["nombre"] = limpiar_nombre(cells[i+1])
 
-                if "cargo" in texto and i+1 < len(cells):
+                # CARGO
+                if texto.strip() == "cargo" and i+1 < len(cells):
                     datos["cargo"] = cells[i+1]
 
+                # COMPAÑIA
                 if "compañ" in texto and i+1 < len(cells):
                     datos["compania"] = cells[i+1].upper()
 
-                if "mail" in texto or "correo" in texto:
-                    if i+1 < len(cells):
-                        datos["correo"] = cells[i+1]
+                # CORREO (evita agarrar texto del párrafo)
+                if texto.strip() in ["correo", "e-mail", "email"] and i+1 < len(cells):
+                    datos["correo"] = cells[i+1]
 
-                if "tel" in texto and i+1 < len(cells):
+                # TELÉFONO
+                if texto.strip() in ["telefono", "teléfono", "tel"] and i+1 < len(cells):
                     datos["telefono"] = cells[i+1]
 
+                # CIUDAD
                 if "ciudad" in texto and i+1 < len(cells):
                     datos["ciudad"] = cells[i+1]
 
+                # SERVICIO
                 if "tipo de servicio" in texto and i+1 < len(cells):
                     datos["servicio"] = cells[i+1].lower()
 
+                # MODALIDAD
                 if "tiempo de servicio" in texto and i+1 < len(cells):
                     datos["modalidad"] = cells[i+1].lower()
 
+    # Fallbacks
+    datos.setdefault("correo", "")
+    datos.setdefault("telefono", "")
+    datos.setdefault("cargo", "")
+    datos.setdefault("compania", "")
+    datos.setdefault("ciudad", "Bogotá")
+
     return datos
 
+# =========================
+# 🧠 DETECTAR SERVICIO POR "X"
+# =========================
+
+def detectar_servicio_por_x(doc):
+    for table in doc.tables:
+        for row in table.rows:
+            cells = [limpiar(c.text).lower() for c in row.cells]
+
+            if "x" in cells:
+                idx = cells.index("x")
+                if idx > 0:
+                    servicio = cells[idx-1]
+
+                    if "vigilancia" in servicio:
+                        return "vigilancia"
+                    if "escolta" in servicio:
+                        return "escolta"
+                    if "confiabilidad" in servicio:
+                        return "confiabilidad"
+                    if "electronica" in servicio:
+                        return "seguridad_electronica"
+                    if "evento" in servicio:
+                        return "evento"
+
+    return None
 
 # =========================
 # 🧠 DETECTAR PLANTILLA
 # =========================
 
-def detectar_plantilla(datos):
+def detectar_plantilla(datos, servicio_x=None):
     servicio = datos.get("servicio", "")
     modalidad = datos.get("modalidad", "")
+
+    # usar detección por X si existe
+    if servicio_x:
+        servicio = servicio_x
 
     if "vigilancia" in servicio:
         if "sin arma" in servicio:
@@ -134,24 +168,42 @@ def detectar_plantilla(datos):
 
     return None
 
-
 # =========================
-# 🧠 REEMPLAZAR VARIABLES
+# 🧠 REEMPLAZO FLEXIBLE
 # =========================
 
 def reemplazar(doc, contexto):
+    alias = {
+        "fecha": contexto.get("fecha completa actual", ""),
+        "fecha completa actual": contexto.get("fecha completa actual", ""),
+        "Cargo": contexto.get("cargo", ""),
+        "cargo": contexto.get("cargo", ""),
+        "nombre": contexto.get("nombre", ""),
+        "Nombre": contexto.get("nombre", ""),
+        "correo": contexto.get("correo", ""),
+        "telefono": contexto.get("telefono", ""),
+        "ciudad": contexto.get("ciudad", ""),
+        "compania": contexto.get("compania", ""),
+        "alcance": contexto.get("alcance", ""),
+        "consecutivo": contexto.get("consecutivo", ""),
+        "saludo": f"{contexto.get('tratamiento','')} {contexto.get('nombre_corto','')}"
+    }
+
+    def reemplazar_texto(texto):
+        for k, v in alias.items():
+            texto = texto.replace(f"{{{{{k}}}}}", str(v))
+        return texto
+
     for p in doc.paragraphs:
-        for k, v in contexto.items():
-            if f"{{{{{k}}}}}" in p.text:
-                p.text = p.text.replace(f"{{{{{k}}}}}", str(v))
+        for run in p.runs:
+            run.text = reemplazar_texto(run.text)
 
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
-                for k, v in contexto.items():
-                    if f"{{{{{k}}}}}" in cell.text:
-                        cell.text = cell.text.replace(f"{{{{{k}}}}}", str(v))
-
+                for p in cell.paragraphs:
+                    for run in p.runs:
+                        run.text = reemplazar_texto(run.text)
 
 # =========================
 # 🚀 ENDPOINT
@@ -163,39 +215,33 @@ async def procesar(file: UploadFile = File(...)):
         temp_path = "temp.docx"
         output_path = "resultado.docx"
 
-        # Guardar archivo
         with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
         doc = Document(temp_path)
 
-        # EXTRAER DATOS
         datos = extraer_datos(doc)
 
-        # VALIDAR
-        if not datos.get("nombre"):
-            return {"error": "No se pudo extraer el nombre"}
+        # detectar servicio por X (más confiable)
+        servicio_x = detectar_servicio_por_x(doc)
 
-        # PLANTILLA
-        plantilla = detectar_plantilla(datos)
+        plantilla = detectar_plantilla(datos, servicio_x)
+
         if not plantilla:
             return {"error": "No se detectó plantilla"}
 
         if not os.path.exists(plantilla):
             return {"error": f"No existe la plantilla: {plantilla}"}
 
-        # FORMATEO
         nombre = datos.get("nombre", "CLIENTE")
         cargo = datos.get("cargo", "")
 
         contexto = {
             "consecutivo": obtener_consecutivo(),
             "fecha completa actual": obtener_fecha(),
-
             "tratamiento": obtener_tratamiento(nombre, cargo),
             "nombre": nombre.upper(),
             "nombre_corto": primer_nombre(nombre),
-
             "cargo": cargo,
             "compania": datos.get("compania", "").upper(),
             "correo": datos.get("correo", ""),
@@ -204,7 +250,6 @@ async def procesar(file: UploadFile = File(...)):
             "alcance": datos.get("ciudad", "")
         }
 
-        # GENERAR DOCUMENTO
         doc_out = Document(plantilla)
         reemplazar(doc_out, contexto)
         doc_out.save(output_path)
