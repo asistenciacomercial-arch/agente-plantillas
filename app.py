@@ -159,26 +159,26 @@ def seleccionar_plantilla(servicio, tipo):
 # REEMPLAZO SEGURO
 # =========================
 def reemplazar(doc, data):
-    def procesar(p):
-        texto = p.text
-        nuevo = texto
+    def reemplazar_texto(parrafo):
+        texto = parrafo.text
 
-        for k, v in data.items():
-            nuevo = nuevo.replace(k, v)
+        for key, val in data.items():
+            if key in texto:
+                texto = texto.replace(key, val)
 
-        if nuevo != texto:
-            p.clear()
-            p.add_run(nuevo)
+        # 🔥 REEMPLAZO SEGURO SIN ROMPER XML
+        if parrafo.text != texto:
+            parrafo.text = texto
 
     for p in doc.paragraphs:
-        procesar(p)
+        reemplazar_texto(p)
 
-    for t in doc.tables:
-        for r in t.rows:
-            for c in r.cells:
-                for p in c.paragraphs:
-                    procesar(p)
-
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    reemplazar_texto(p)
+                    
 # =========================
 # API
 # =========================
