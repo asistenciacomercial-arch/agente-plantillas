@@ -21,20 +21,19 @@ def fecha_espanol():
     return f"{now.day} de {meses[now.month-1]} de {now.year}"
 
 def limpiar_nombre(nombre):
-    nombre = nombre.replace("Sr.", "").replace("Sra.", "").strip()
-    return nombre
+    return nombre.replace("Sr.", "").replace("Sra.", "").strip()
 
 def primer_nombre(nombre):
     return nombre.split()[0].capitalize()
 
 def determinar_tratamiento(nombre, cargo):
     cargo = cargo.lower()
-    if "gerente" in cargo or "director" in cargo or "presidente" in cargo:
+    if any(x in cargo for x in ["gerente", "director", "presidente"]):
         return "Doctor"
     return "Señor"
 
 # ----------------------------
-# EXTRACCIÓN DE DATOS
+# EXTRACCIÓN ROBUSTA
 # ----------------------------
 
 def extraer_datos(doc):
@@ -43,42 +42,39 @@ def extraer_datos(doc):
     for table in doc.tables:
         for row in table.rows:
             cells = [c.text.strip() for c in row.cells]
+            texto_fila = " ".join(cells).lower()
 
-            if len(cells) >= 2:
-                key = cells[0].lower()
-                value = cells[1]
+            if "contacto" in texto_fila:
+                datos["nombre"] = limpiar_nombre(cells[-1])
 
-                if "contacto" in key:
-                    datos["nombre"] = limpiar_nombre(value)
+            elif "cargo" in texto_fila:
+                datos["cargo"] = cells[-1]
 
-                elif "cargo" in key:
-                    datos["cargo"] = value
+            elif "compañía" in texto_fila:
+                datos["compania"] = cells[-1].upper()
 
-                elif "compañía" in key:
-                    datos["compania"] = value.upper()
+            elif "teléfono" in texto_fila:
+                datos["telefono"] = cells[-1]
 
-                elif "teléfono" in key:
-                    datos["telefono"] = value
+            elif "ciudad" in texto_fila:
+                datos["ciudad"] = cells[-1]
 
-                elif "ciudad" in key:
-                    datos["ciudad"] = value
+            elif "mail" in texto_fila or "correo" in texto_fila:
+                datos["correo"] = cells[-1]
 
-                elif "e- mail" in key:
-                    datos["correo"] = value
+            elif "tipo de servicio" in texto_fila:
+                datos["servicio"] = cells[-1].lower()
 
-                elif "tipo de servicio" in key:
-                    datos["servicio"] = value.lower()
-
-                elif "tiempo de servicio" in key:
-                    datos["modalidad"] = value.lower()
+            elif "tiempo de servicio" in texto_fila:
+                datos["modalidad"] = cells[-1].lower()
 
     return datos
 
 # ----------------------------
-# DETECCIÓN AVANZADA
+# DETECCIÓN DE DETALLES
 # ----------------------------
 
-def detectar_subtipo_y_flags(doc):
+def detectar_detalles(doc):
     texto = "\n".join([p.text.lower() for p in doc.paragraphs])
 
     resultado = {
@@ -95,7 +91,7 @@ def detectar_subtipo_y_flags(doc):
     return resultado
 
 # ----------------------------
-# MAPEO DE PLANTILLAS REAL
+# SELECCIÓN DE PLANTILLA
 # ----------------------------
 
 def seleccionar_plantilla(datos, extra):
@@ -106,7 +102,8 @@ def seleccionar_plantilla(datos, extra):
         modalidad = "m" if "mensual" in datos.get("modalidad","") else "e"
         f = "_f" if extra["fortalecimiento"] else ""
 
-        return f"plantillas/vigilancia_{arma}_{modalidad}{f}.docx"
+        ruta = f"plantillas/vigilancia_{arma}_{modalidad}{f}.docx"
+        return ruta
 
     if "escolta" in servicio:
         return "plantillas/escolta_mensual.docx"
@@ -141,31 +138,42 @@ async def procesar(file: UploadFile = File(...)):
         doc = Document(temp_path)
 
         datos = extraer_datos(doc)
-        extra = detectar_subtipo_y_flags(doc)
+        extra = detectar_detalles(doc)
 
         plantilla = seleccionar_plantilla(datos, extra)
 
         if not plantilla or not os.path.exists(plantilla):
             return {"error": f"No existe plantilla: {plantilla}"}
 
-        tratamiento = determinar_tratamiento(datos["nombre"], datos["cargo"])
+        tratamiento = determinar_tratamiento(
+            datos.get("nombre", ""),
+            datos.get("cargo", "")
+        )
 
         contexto = {
             "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
             "fecha": fecha_espanol(),
+
             "tratamiento": tratamiento,
-            "nombre": datos["nombre"].upper(),
-            "nombre_simple": primer_nombre(datos["nombre"]),
-            "cargo": datos["cargo"],
-            "compania": datos["compania"],
-            "correo": datos.get("correo",""),
-            "telefono": datos.get("telefono",""),
-            "ciudad": datos.get("ciudad","")
+
+            # Nombre completo en MAYÚSCULA
+            "nombre": datos.get("nombre", "").upper(),
+
+            # Solo primer nombre capitalizado
+            "nombre_simple": primer_nombre(datos.get("nombre", "")),
+
+            "cargo": datos.get("cargo", ""),
+            "compania": datos.get("compania", ""),
+            "correo": datos.get("correo", "No especificado"),
+            "telefono": datos.get("telefono", "No especificado"),
+
+            # 🔥 CLAVE: alcance correcto
+            "alcance": datos.get("ciudad") or "Bogotá"
         }
 
-        doc = DocxTemplate(plantilla)
-        doc.render(contexto)
-        doc.save(output_path)
+        doc_tpl = DocxTemplate(plantilla)
+        doc_tpl.render(contexto)
+        doc_tpl.save(output_path)
 
         return FileResponse(
             output_path,
