@@ -81,11 +81,13 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
+    # =====================
+    # 1. TABLAS
+    # =====================
     for table in doc.tables:
         for row in table.rows:
             celdas = [c.text.strip() for c in row.cells]
 
-            # recorrer en pares (campo - valor)
             for i in range(0, len(celdas) - 1):
                 campo = celdas[i].lower()
                 valor = celdas[i + 1].strip()
@@ -93,41 +95,57 @@ def extraer_datos(doc):
                 if not valor:
                     continue
 
-                # =====================
-                # NOMBRE
-                # =====================
                 if "cliente" in campo or "contacto" in campo:
                     datos["nombre"] = limpiar_nombre(valor)
 
-                # =====================
-                # CARGO
-                # =====================
                 elif "cargo" in campo:
                     datos["cargo"] = valor
 
-                # =====================
-                # COMPAÑÍA
-                # =====================
                 elif "compañ" in campo or "empresa" in campo:
                     datos["compania"] = valor.upper()
 
-                # =====================
-                # CORREO
-                # =====================
                 elif "mail" in campo or "correo" in campo:
                     datos["correo"] = valor
 
-                # =====================
-                # TELÉFONO
-                # =====================
                 elif "tel" in campo or "cel" in campo:
                     datos["telefono"] = valor
 
-                # =====================
-                # CIUDAD
-                # =====================
                 elif "ciudad" in campo:
                     datos["ciudad"] = valor
+
+    # =====================
+    # 2. PÁRRAFOS (CLAVE)
+    # =====================
+    lineas = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+
+    for l in lineas:
+        l_up = l.upper()
+
+        # NOMBRE
+        if not datos["nombre"]:
+            if l.isupper() and 2 <= len(l.split()) <= 4:
+                if not any(x in l_up for x in ["PROPUESTA", "SERVICIO", "VIGILANCIA", "NECESIDADES"]):
+                    if "EDIFICIO" not in l_up:
+                        datos["nombre"] = limpiar_nombre(l)
+
+        # TELÉFONO
+        if not datos["telefono"]:
+            if any(char.isdigit() for char in l) and len(l) >= 7:
+                datos["telefono"] = l
+
+        # CIUDAD
+        if not datos["ciudad"]:
+            if "COLOMBIA" in l_up:
+                datos["ciudad"] = l.replace(", Colombia", "").strip()
+
+    # =====================
+    # 3. FALLBACKS
+    # =====================
+    if not datos["nombre"]:
+        datos["nombre"] = "CLIENTE"
+
+    if not datos["ciudad"]:
+        datos["ciudad"] = "Bogotá"
 
     return datos
     
@@ -274,10 +292,12 @@ async def procesar(file: UploadFile = File(...)):
         plantilla = seleccionar_plantilla(servicio, detalle, modalidad)
 
         # 🔥 crear reemplazos (ESTO TE FALTABA)
+        nombre = datos.get("nombre") or "Cliente"
+
         reemplazos = {
             "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
             "fecha": fecha_es(),
-            "nombre": datos.get("nombre", ""),
+            "nombre": nombre,
             "cargo": datos.get("cargo", ""),
             "compania": datos.get("compania", ""),
             "correo": datos.get("correo", ""),
@@ -286,7 +306,7 @@ async def procesar(file: UploadFile = File(...)):
             "alcance": datos.get("ciudad", ""),
             "tratamiento": obtener_tratamiento(datos.get("cargo", "")),
             "saludo": "Estimado",
-            "nombre_corto": datos.get("nombre", "").split(" ")[0].capitalize() if datos.get("nombre") else ""
+            "nombre_corto": nombre.split()[0],
         }
 
         # generar documento
