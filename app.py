@@ -1,145 +1,161 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
 from docx import Document
-from docxtpl import DocxTemplate
 import shutil
 import os
 from datetime import datetime
 
 app = FastAPI()
 
-# ----------------------------
-# FORMATEOS
-# ----------------------------
 
-def fecha_espanol():
-    meses = [
-        "enero","febrero","marzo","abril","mayo","junio",
-        "julio","agosto","septiembre","octubre","noviembre","diciembre"
-    ]
-    now = datetime.now()
-    return f"{now.day} de {meses[now.month-1]} de {now.year}"
+# =========================
+# 🧠 UTILIDADES
+# =========================
+
+def limpiar(texto):
+    return texto.strip().replace("\n", " ")
+
 
 def limpiar_nombre(nombre):
-    return nombre.replace("Sr.", "").replace("Sra.", "").strip()
+    return nombre.replace("Sr.", "").replace("Sra.", "").replace("Dr.", "").strip()
+
 
 def primer_nombre(nombre):
     return nombre.split()[0].capitalize()
 
-def determinar_tratamiento(nombre, cargo):
-    cargo = cargo.lower()
-    if any(x in cargo for x in ["gerente", "director", "presidente"]):
+
+def obtener_tratamiento(nombre, cargo):
+    nombre = nombre.lower()
+    cargo = (cargo or "").lower()
+
+    if "gerente" in cargo or "director" in cargo or "doctor" in cargo:
         return "Doctor"
+
+    if nombre.endswith("a"):
+        return "Señora"
+
     return "Señor"
 
-# ----------------------------
-# EXTRACCIÓN ROBUSTA
-# ----------------------------
+
+def obtener_fecha():
+    meses = {
+        "January": "enero", "February": "febrero", "March": "marzo",
+        "April": "abril", "May": "mayo", "June": "junio",
+        "July": "julio", "August": "agosto", "September": "septiembre",
+        "October": "octubre", "November": "noviembre", "December": "diciembre"
+    }
+
+    now = datetime.now()
+    mes = meses[now.strftime("%B")]
+    return f"{now.day} de {mes} de {now.year}"
+
+
+def obtener_consecutivo():
+    return datetime.now().strftime("%Y%m%d%H%M")
+
+
+# =========================
+# 🧠 EXTRACCIÓN INTELIGENTE
+# =========================
 
 def extraer_datos(doc):
     datos = {}
 
-    def asignar(clave, valor):
-        clave = clave.lower().strip()
-        valor = (valor or "").strip()
-
-        if not valor:
-            return
-
-        if clave == "contacto":
-            datos["nombre"] = limpiar_nombre(valor)
-
-        elif clave == "cargo":
-            datos["cargo"] = valor
-
-        elif clave == "compañía":
-            datos["compania"] = valor.upper()
-
-        elif clave in ["teléfono", "telefono"]:
-            datos["telefono"] = valor
-
-        elif clave in ["ciudad - lugar", "ciudad"]:
-            datos["ciudad"] = valor
-
-        elif clave in ["e- mail", "e-mail", "correo"]:
-            datos["correo"] = valor
-
-        elif clave == "tipo de servicio":
-            datos["servicio"] = valor.lower()
-
-        elif clave == "tiempo de servicio":
-            datos["modalidad"] = valor.lower()
-
-    # recorrer TODAS las tablas
     for table in doc.tables:
         for row in table.rows:
-            cells = [c.text.strip() for c in row.cells]
+            cells = [limpiar(c.text) for c in row.cells if limpiar(c.text)]
 
-            # 🔥 CASO 4 COLUMNAS: clave, valor, clave, valor
-            if len(cells) >= 4:
-                asignar(cells[0], cells[1])
-                asignar(cells[2], cells[3])
+            for i in range(len(cells)):
+                texto = cells[i].lower()
 
-            # 🔥 CASO 2 COLUMNAS
-            elif len(cells) >= 2:
-                asignar(cells[0], cells[1])
+                if "contacto" in texto and i+1 < len(cells):
+                    datos["nombre"] = limpiar_nombre(cells[i+1])
+
+                if "cargo" in texto and i+1 < len(cells):
+                    datos["cargo"] = cells[i+1]
+
+                if "compañ" in texto and i+1 < len(cells):
+                    datos["compania"] = cells[i+1].upper()
+
+                if "mail" in texto or "correo" in texto:
+                    if i+1 < len(cells):
+                        datos["correo"] = cells[i+1]
+
+                if "tel" in texto and i+1 < len(cells):
+                    datos["telefono"] = cells[i+1]
+
+                if "ciudad" in texto and i+1 < len(cells):
+                    datos["ciudad"] = cells[i+1]
+
+                if "tipo de servicio" in texto and i+1 < len(cells):
+                    datos["servicio"] = cells[i+1].lower()
+
+                if "tiempo de servicio" in texto and i+1 < len(cells):
+                    datos["modalidad"] = cells[i+1].lower()
 
     return datos
-# ----------------------------
-# DETECCIÓN DE DETALLES
-# ----------------------------
 
-def detectar_detalles(doc):
-    texto = "\n".join([p.text.lower() for p in doc.paragraphs])
 
-    resultado = {
-        "arma": "sin_arma",
-        "fortalecimiento": False
-    }
+# =========================
+# 🧠 DETECTAR PLANTILLA
+# =========================
 
-    if "arma" in texto:
-        resultado["arma"] = "armada"
-
-    if "fortalecimiento" in texto:
-        resultado["fortalecimiento"] = True
-
-    return resultado
-
-# ----------------------------
-# SELECCIÓN DE PLANTILLA
-# ----------------------------
-
-def seleccionar_plantilla(datos, extra):
+def detectar_plantilla(datos):
     servicio = datos.get("servicio", "")
+    modalidad = datos.get("modalidad", "")
 
     if "vigilancia" in servicio:
-        arma = extra["arma"]
-        modalidad = "m" if "mensual" in datos.get("modalidad","") else "e"
-        f = "_f" if extra["fortalecimiento"] else ""
-
-        ruta = f"plantillas/vigilancia_{arma}_{modalidad}{f}.docx"
-        return ruta
+        if "sin arma" in servicio:
+            if "mensual" in modalidad:
+                return "plantillas/vigilancia_sin_arma_m.docx"
+            else:
+                return "plantillas/vigilancia_sin_arma_e_12h.docx"
+        else:
+            if "mensual" in modalidad:
+                return "plantillas/vigilancia_armada_m.docx"
+            else:
+                return "plantillas/vigilancia_armada_e.docx"
 
     if "escolta" in servicio:
-        return "plantillas/escolta_mensual.docx"
+        if "motorizado" in servicio:
+            return "plantillas/escolta_motorizado.docx"
+        if "conductor" in servicio:
+            return "plantillas/escolta_conductor_ev.docx"
+        return "plantillas/escolta_a_pie.docx"
 
     if "confiabilidad" in servicio:
         return "plantillas/confiabilidad.docx"
 
-    if "monitoreo" in servicio:
-        return "plantillas/monitoreo.docx"
-
     if "electronica" in servicio:
         return "plantillas/seguridad_electronica.docx"
 
-    if "eventos" in servicio:
+    if "evento" in servicio:
         return "plantillas/seguridad_en_eventos.docx"
 
     return None
 
-# ----------------------------
-# ENDPOINT
-# ----------------------------
+
+# =========================
+# 🧠 REEMPLAZAR VARIABLES
+# =========================
+
+def reemplazar(doc, contexto):
+    for p in doc.paragraphs:
+        for k, v in contexto.items():
+            if f"{{{{{k}}}}}" in p.text:
+                p.text = p.text.replace(f"{{{{{k}}}}}", str(v))
+
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for k, v in contexto.items():
+                    if f"{{{{{k}}}}}" in cell.text:
+                        cell.text = cell.text.replace(f"{{{{{k}}}}}", str(v))
+
+
+# =========================
+# 🚀 ENDPOINT
+# =========================
 
 @app.post("/procesar/")
 async def procesar(file: UploadFile = File(...)):
@@ -147,51 +163,54 @@ async def procesar(file: UploadFile = File(...)):
         temp_path = "temp.docx"
         output_path = "resultado.docx"
 
+        # Guardar archivo
         with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
         doc = Document(temp_path)
 
+        # EXTRAER DATOS
         datos = extraer_datos(doc)
-        extra = detectar_detalles(doc)
 
-        plantilla = seleccionar_plantilla(datos, extra)
+        # VALIDAR
+        if not datos.get("nombre"):
+            return {"error": "No se pudo extraer el nombre"}
 
-        if not plantilla or not os.path.exists(plantilla):
-            return {"error": f"No existe plantilla: {plantilla}"}
+        # PLANTILLA
+        plantilla = detectar_plantilla(datos)
+        if not plantilla:
+            return {"error": "No se detectó plantilla"}
 
-        tratamiento = determinar_tratamiento(
-            datos.get("nombre", ""),
-            datos.get("cargo", "")
-        )
+        if not os.path.exists(plantilla):
+            return {"error": f"No existe la plantilla: {plantilla}"}
+
+        # FORMATEO
+        nombre = datos.get("nombre", "CLIENTE")
+        cargo = datos.get("cargo", "")
 
         contexto = {
-            "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
-            "fecha": fecha_espanol(),
+            "consecutivo": obtener_consecutivo(),
+            "fecha completa actual": obtener_fecha(),
 
-            "tratamiento": tratamiento,
+            "tratamiento": obtener_tratamiento(nombre, cargo),
+            "nombre": nombre.upper(),
+            "nombre_corto": primer_nombre(nombre),
 
-            # Nombre completo en MAYÚSCULA
-            "nombre": datos.get("nombre", "").upper(),
-
-            # Solo primer nombre capitalizado
-            "nombre_simple": primer_nombre(datos.get("nombre", "")),
-
-            "cargo": datos.get("cargo", ""),
-            "compania": datos.get("compania", ""),
-            "correo": datos.get("correo", "No especificado"),
-            "telefono": datos.get("telefono", "No especificado"),
-
-            # 🔥 CLAVE: alcance correcto
-            "alcance": datos.get("ciudad") or "Bogotá"
+            "cargo": cargo,
+            "compania": datos.get("compania", "").upper(),
+            "correo": datos.get("correo", ""),
+            "telefono": datos.get("telefono", ""),
+            "ciudad": datos.get("ciudad", ""),
+            "alcance": datos.get("ciudad", "")
         }
 
-        doc_tpl = DocxTemplate(plantilla)
-        doc_tpl.render(contexto)
-        doc_tpl.save(output_path)
+        # GENERAR DOCUMENTO
+        doc_out = Document(plantilla)
+        reemplazar(doc_out, contexto)
+        doc_out.save(output_path)
 
         return FileResponse(
-            output_path,
+            path=output_path,
             filename="resultado.docx",
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
