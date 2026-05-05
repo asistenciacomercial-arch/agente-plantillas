@@ -82,21 +82,32 @@ def extraer_datos(doc):
     }
 
     try:
-        tabla = doc.tables[0]  # 👈 tu formato siempre usa la primera tabla
+        tabla = doc.tables[0]
 
-        # 🔥 AJUSTA ESTAS POSICIONES SEGÚN TU FORMATO REAL
+        # 🔥 POSICIONES REALES (VERIFICADAS CON TU DOC)
 
-        datos["nombre"] = limpiar_nombre(tabla.cell(1, 1).text.strip())
-        datos["cargo"] = tabla.cell(2, 1).text.strip()
-        datos["compania"] = tabla.cell(3, 1).text.strip().upper()
-        datos["correo"] = tabla.cell(4, 1).text.strip()
-        datos["telefono"] = tabla.cell(5, 1).text.strip().replace(" ", "")
-        datos["ciudad"] = tabla.cell(6, 1).text.strip()
+        datos["compania"] = tabla.rows[4].cells[1].text.strip().upper()
+        datos["nombre"] = limpiar_nombre(tabla.rows[6].cells[1].text.strip())
+        datos["correo"] = tabla.rows[7].cells[1].text.strip()
+        datos["cargo"] = tabla.rows[8].cells[1].text.strip()
+        datos["telefono"] = tabla.rows[8].cells[3].text.strip().replace(" ", "")
 
     except Exception as e:
-        print("ERROR EXTRAYENDO TABLA:", e)
+        print("ERROR TABLA PRINCIPAL:", e)
+
+    # 🔥 CIUDAD (TABLA DE ABAJO)
+    try:
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if "bogotá" in cell.text.lower():
+                        datos["ciudad"] = "Bogotá"
+                        break
+    except:
+        pass
 
     return datos
+    
 # =========================
 # DETECTAR SERVICIO (CLAVE)
 # =========================
