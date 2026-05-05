@@ -211,59 +211,7 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
 # =========================
 # REEMPLAZO SEGURO
 # =========================
-def reemplazar(doc, data):
-    def reemplazar_texto(parrafo):
-        texto = parrafo.text
 
-        for key, val in data.items():
-            if key in texto:
-                texto = texto.replace(key, val)
-
-        # 🔥 REEMPLAZO SEGURO SIN ROMPER XML
-        if parrafo.text != texto:
-            parrafo.text = texto
-
-    for p in doc.paragraphs:
-        reemplazar_texto(p)
-
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for p in cell.paragraphs:
-                    reemplazar_texto(p)
-def editar_contenido(doc, datos, servicio, detalle):
-    for p in doc.paragraphs:
-        texto = p.text.lower()
-
-        # 🔹 ALCANCE (CIUDAD)
-        if "esta propuesta aplica para la ciudad" in texto:
-            nuevo = f"Esta propuesta aplica para la ciudad de {datos['ciudad']}."
-            p.text = nuevo
-
-        # 🔹 SALUDO INICIAL
-        if "cordial saludo" in texto:
-            nombre = datos["nombre"].split()[0].capitalize()
-            p.text = f"Reciba un cordial saludo, {nombre}."
-
-        # 🔹 TEXTO SEGÚN SERVICIO
-        if "servicio de seguridad" in texto:
-
-            if servicio == "vigilancia":
-                if detalle == "armada":
-                    p.text = "El servicio de vigilancia armada será prestado con personal altamente capacitado y autorizado."
-                else:
-                    p.text = "El servicio de vigilancia sin arma será prestado por personal entrenado en control y prevención."
-
-            elif servicio == "escolta":
-                p.text = "El servicio de escolta será prestado por personal especializado en protección de personas."
-
-            elif servicio == "electronica":
-                p.text = "Se implementarán sistemas de seguridad electrónica con monitoreo continuo."
-
-        # 🔹 CIERRE PERSONALIZADO
-        if "quedamos atentos" in texto:
-            p.text = f"Quedamos atentos a cualquier inquietud en la ciudad de {datos['ciudad']}."
-            
 # =========================
 # API
 # =========================
@@ -293,11 +241,8 @@ async def procesar(file: UploadFile = File(...)):
         print("MODALIDAD:", modalidad)
         
         plantilla = seleccionar_plantilla(servicio, detalle, modalidad)
-        
-        doc_final = Document(plantilla)
-
-        editar_contenido(doc_final, datos, servicio, detalle)
-
+        from docxtpl import DocxTemplate
+        doc_tpl = DocxTemplate(plantilla)
         tratamiento = obtener_tratamiento(datos["cargo"])
 
         reemplazos = {
@@ -320,7 +265,8 @@ async def procesar(file: UploadFile = File(...)):
         if os.path.exists(output):
             os.remove(output)
 
-        doc_final.save(output)
+        doc_tpl.render(reemplazos)
+        doc_tpl.save(output)
 
         return FileResponse(output, filename="resultado.docx")
 
