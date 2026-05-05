@@ -81,98 +81,74 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
-    # =====================
-    # 1. EXTRAER DESDE TABLAS (FORMATO REAL)
-    # =====================
-    for table in doc.tables:
-        for row in table.rows:
-            celdas = [c.text.strip() for c in row.cells if c.text.strip()]
+    # =========================
+    # 1. TABLA PRINCIPAL (CONTACTO)
+    # =========================
+    if doc.tables:
+        tabla = doc.tables[0]  # la primera tabla siempre es contacto
+
+        for row in tabla.rows:
+            celdas = [c.text.strip() for c in row.cells]
 
             if len(celdas) < 2:
                 continue
 
-            texto_row = " ".join(celdas).lower()
+            campo = celdas[0].lower()
+            valor = celdas[1].strip()
 
-            for i in range(len(celdas) - 1):
-                campo = celdas[i].lower()
-                valor = celdas[i + 1].strip()
+            if not valor:
+                continue
 
-                if not valor:
-                    continue
+            if "cliente" in campo or "contacto" in campo:
+                datos["nombre"] = limpiar_nombre(valor)
 
-                # 🔹 nombre
-                if "cliente" in campo or "contacto" in campo:
-                    datos["nombre"] = limpiar_nombre(valor)
+            elif "cargo" in campo:
+                datos["cargo"] = valor
 
-                # 🔹 cargo
-                elif "cargo" in campo:
-                    datos["cargo"] = valor
+            elif "mail" in campo or "correo" in campo:
+                datos["correo"] = valor
 
-                # 🔹 empresa
-                elif "compañ" in campo or "empresa" in campo:
-                    datos["compania"] = valor.upper()
+            elif "tel" in campo or "cel" in campo:
+                datos["telefono"] = valor
 
-                # 🔹 correo
-                elif "mail" in campo or "correo" in campo:
-                    datos["correo"] = valor
+            elif "empresa" in campo or "compañ" in campo or "edificio" in campo:
+                datos["compania"] = valor.upper()
 
-                # 🔹 teléfono
-                elif "tel" in campo or "cel" in campo:
-                    datos["telefono"] = valor
+    # =========================
+    # 2. SEGUNDA TABLA (SI EXISTE)
+    # =========================
+    if len(doc.tables) > 1:
+        tabla2 = doc.tables[1]
 
-                # 🔹 ciudad
-                elif "ciudad" in campo:
-                    datos["ciudad"] = valor
+        for row in tabla2.rows:
+            texto = " ".join([c.text.strip() for c in row.cells]).upper()
 
-    # =====================
-    # 2. EXTRAER DESDE TEXTO (RESPALDO)
-    # =====================
-    lineas = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+            if "COLOMBIA" in texto:
+                datos["ciudad"] = texto.replace(", COLOMBIA", "").strip()
 
-    for l in lineas:
-        l_up = l.upper()
+    # =========================
+    # 3. PÁRRAFOS (RESPALDO REAL)
+    # =========================
+    for p in doc.paragraphs:
+        t = p.text.strip()
+        t_up = t.upper()
 
-        # 🚫 ignorar bloques largos (descripciones)
-        if len(l.split()) > 8:
-            continue
+        # ciudad
+        if not datos["ciudad"] and "COLOMBIA" in t_up:
+            datos["ciudad"] = t.replace(", Colombia", "").strip()
 
-        # 🚫 ignorar frases típicas
-        if any(x in l_up for x in [
-            "PROPUESTA",
-            "REQUER",
-            "SERVICIO",
-            "VIGILANCIA",
-            "FORTALECIMIENTO",
-            "SEGURIDAD"
-        ]):
-            continue
-
-        # =====================
-        # NOMBRE (formato real: mayúscula, corto)
-        # =====================
-        if not datos["nombre"]:
-            if l.isupper() and 2 <= len(l.split()) <= 3:
-                if all(p.isalpha() for p in l.split()):
-                    if not any(x in l for x in ["SE", "REQUIERE", "PROPUESTA"]):
-                        datos["nombre"] = limpiar_nombre(l)
-        # =====================
-        # TELÉFONO
-        # =====================
+        # teléfono (línea sola con números)
         if not datos["telefono"]:
-            if any(char.isdigit() for char in l) and len(l) >= 7:
-                if len(l) <= 15:
-                    datos["telefono"] = l
+            if t.isdigit() and len(t) >= 7:
+                datos["telefono"] = t
 
-        # =====================
-        # CIUDAD
-        # =====================
-        if not datos["ciudad"]:
-            if "COLOMBIA" in l_up:
-                datos["ciudad"] = l.replace(", Colombia", "").strip()
+        # compañía (EDIFICIO ...)
+        if not datos["compania"] and "EDIFICIO" in t_up:
+            datos["compania"] = t_up
 
-    # =====================
-    # 3. LIMPIEZA FINAL
-    # =====================
+    # =========================
+    # 4. LIMPIEZA FINAL
+    # =========================
     if not datos["nombre"]:
         datos["nombre"] = "CLIENTE"
 
