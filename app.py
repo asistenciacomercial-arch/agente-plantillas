@@ -42,63 +42,32 @@ def fecha_es():
 # EXTRAER DATOS (FORMATO REAL)
 # =========================
 def extraer_datos(doc):
-    datos = {
-        "nombre": "",
-        "cargo": "",
-        "compania": "",
-        "correo": "",
-        "telefono": "",
-        "ciudad": "",
-    }
+    datos = {}
 
-    if not doc.tables:
-        return datos
+    try:
+        tabla = doc.tables[0]
 
-    tabla = doc.tables[0]
+        # 🔥 EXACTO
+        datos["compania"] = tabla.rows[2].cells[1].text.strip()
 
-    for row in tabla.rows:
-        cells = [c.text.strip() for c in row.cells]
+        datos["nombre"] = tabla.rows[3].cells[1].text.strip()
+        datos["nombre_completo"] = datos["nombre"].upper()
 
-        # 🔥 recorrer en pares (CLAVE)
-        for i in range(0, len(cells), 2):
+        datos["correo"] = tabla.rows[3].cells[3].text.strip()
 
-            if i + 1 >= len(cells):
-                continue
+        datos["cargo"] = tabla.rows[4].cells[1].text.strip()
 
-            label = cells[i].strip().lower()
-            valor = cells[i + 1].strip()
+        datos["telefono"] = tabla.rows[4].cells[3].text.strip()
 
-            if not label or not valor:
-                continue
+    except Exception as e:
+        print("ERROR TABLA:", e)
 
-            # 🔥 NORMALIZAR label (esto evita errores)
-            label = label.replace(":", "").strip()
+    # ciudad fija (tu formato SIEMPRE usa Bogotá)
+    datos["ciudad"] = "Bogotá"
 
-            # ========= MATCH EXACTO =========
-            if "contacto" in label:
-                datos["nombre"] = limpiar_nombre(valor)
+    print("DATOS EXTRAIDOS REALES:", datos)
 
-            elif "cargo" in label:
-                datos["cargo"] = valor
-
-            elif "compañ" in label or "empresa" in label or "edificio" in label:
-                datos["compania"] = valor.upper()
-
-            elif "mail" in label or "correo" in label:
-                datos["correo"] = valor
-
-            elif "tel" in label or "cel" in label:
-                datos["telefono"] = valor.replace(" ", "")
-
-            elif "ciudad" in label:
-                datos["ciudad"] = valor
-
-    # 🔥 DEBUG REAL (OBLIGATORIO)
-    print(">>> DATOS EXTRAIDOS >>>")
-    for k, v in datos.items():
-        print(k, ":", v)
-
-    return datos
+    return datoss
     
 # =========================
 # DETECCIÓN SERVICIO
