@@ -242,6 +242,22 @@ async def procesar(file: UploadFile = File(...)):
         
         plantilla = seleccionar_plantilla(servicio, detalle, modalidad)
         from docxtpl import DocxTemplate
+        tratamiento = obtener_tratamiento(datos["cargo"])
+
+        reemplazos = {
+            "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
+            "fecha": fecha_es(),
+            "tratamiento": tratamiento,
+            "nombre": datos["nombre"],
+            "cargo": datos["cargo"],
+            "compania": datos["compania"],
+            "correo": datos["correo"],
+            "telefono": datos["telefono"],
+            "ciudad": datos["ciudad"],
+            "alcance": datos["ciudad"],
+            "saludo": "Estimado",
+            "nombre_corto": datos["nombre"].split()[0].capitalize()
+        }
         doc_tpl = DocxTemplate(plantilla)
         doc_tpl.render(reemplazos)
         doc_tpl.save(output)
