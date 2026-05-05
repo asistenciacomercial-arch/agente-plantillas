@@ -53,30 +53,38 @@ def extraer_datos(doc):
 
     for table in doc.tables:
         for row in table.rows:
+
+            # evitar filas raras
             if len(row.cells) < 2:
                 continue
 
             label = row.cells[0].text.strip().lower()
+
+            # 🔥 manejar filas con 4 columnas (cargo + telefono)
+            if len(row.cells) >= 4:
+                valor_1 = row.cells[1].text.strip()
+                valor_2 = row.cells[3].text.strip()
+
+                if "cargo" in label:
+                    datos["cargo"] = valor_1
+
+                if "tel" in row.cells[2].text.lower():
+                    datos["telefono"] = valor_2.replace(" ", "")
+
+            # 🔥 manejo normal
             valor = row.cells[1].text.strip()
 
             if not valor:
                 continue
 
-            # 🔥 CLAVE: usar etiquetas reales
             if "contacto" in label:
                 datos["nombre"] = limpiar_nombre(valor)
-
-            elif "cargo" in label:
-                datos["cargo"] = valor
 
             elif "compañ" in label or "edificio" in label:
                 datos["compania"] = valor.upper()
 
             elif "mail" in label:
                 datos["correo"] = valor
-
-            elif "tel" in label:
-                datos["telefono"] = valor.replace(" ", "")
 
             elif "ciudad" in label:
                 datos["ciudad"] = valor
