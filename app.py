@@ -51,31 +51,43 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
-    try:
-        tabla = doc.tables[0]
-
-        # 📌 POSICIONES REALES DEL FORMATO
-        datos["compania"] = tabla.rows[4].cells[1].text.strip().upper()
-
-        nombre_raw = tabla.rows[6].cells[1].text.strip()
-        datos["nombre"] = limpiar_nombre(nombre_raw)
-
-        datos["correo"] = tabla.rows[7].cells[1].text.strip()
-        datos["cargo"] = tabla.rows[8].cells[1].text.strip()
-        datos["telefono"] = tabla.rows[8].cells[3].text.strip().replace(" ", "")
-
-    except Exception as e:
-        print("❌ ERROR TABLA:", e)
-
-    # 📌 ciudad (tabla inferior)
     for table in doc.tables:
         for row in table.rows:
-            for cell in row.cells:
-                if "bogotá" in cell.text.lower():
-                    datos["ciudad"] = "Bogotá"
+            if len(row.cells) < 2:
+                continue
+
+            label = row.cells[0].text.strip().lower()
+            valor = row.cells[1].text.strip()
+
+            if not valor:
+                continue
+
+            # 🔥 CLAVE: usar etiquetas reales
+            if "contacto" in label:
+                datos["nombre"] = limpiar_nombre(valor)
+
+            elif "cargo" in label:
+                datos["cargo"] = valor
+
+            elif "compañ" in label or "edificio" in label:
+                datos["compania"] = valor.upper()
+
+            elif "mail" in label:
+                datos["correo"] = valor
+
+            elif "tel" in label:
+                datos["telefono"] = valor.replace(" ", "")
+
+            elif "ciudad" in label:
+                datos["ciudad"] = valor
+
+    # fallback ciudad
+    if not datos["ciudad"]:
+        for p in doc.paragraphs:
+            if "colombia" in p.text.lower():
+                datos["ciudad"] = p.text.replace(", Colombia", "").strip()
 
     return datos
-
 # =========================
 # DETECCIÓN SERVICIO
 # =========================
