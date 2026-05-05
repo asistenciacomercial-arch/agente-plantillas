@@ -62,21 +62,32 @@ def detectar_servicio(doc):
         for row in table.rows:
             celdas = [c.text.strip().lower() for c in row.cells]
 
-            if "vigilancia" in celdas[0] and "x" in celdas:
+            # 🔒 Evita error si la fila está vacía
+            if len(celdas) == 0:
+                continue
+
+            texto_fila = " ".join(celdas)
+
+            # 🔍 Buscar la X en cualquier celda
+            tiene_x = any("x" in c for c in celdas)
+
+            if not tiene_x:
+                continue
+
+            if "vigilancia" in texto_fila:
                 return "vigilancia"
 
-            if "escolta" in celdas[0] and "x" in celdas:
+            if "escolta" in texto_fila:
                 return "escolta"
 
-            if "confiabilidad" in celdas[0] and "x" in celdas:
+            if "confiabilidad" in texto_fila:
                 return "confiabilidad"
 
-            if "seguridad electrónica" in celdas[0] and "x" in celdas:
+            if "seguridad electronica" in texto_fila:
                 return "electronica"
 
     return "vigilancia"
-
-
+    
 # -------------------------
 # SELECCIONAR PLANTILLA
 # -------------------------
