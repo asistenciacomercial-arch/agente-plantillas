@@ -81,6 +81,7 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
+    # recorrer TODAS las tablas
     for table in doc.tables:
         for row in table.rows:
             if len(row.cells) < 2:
@@ -92,9 +93,9 @@ def extraer_datos(doc):
             if not value:
                 continue
 
-            # 🔥 MAPEO EXACTO
             if "cliente" in label or "contacto" in label:
-                datos["nombre"] = limpiar_nombre(value)
+                if es_nombre_valido(value):
+                    datos["nombre"] = limpiar_nombre(value)
 
             elif "cargo" in label:
                 datos["cargo"] = value
@@ -111,18 +112,31 @@ def extraer_datos(doc):
             elif "ciudad" in label:
                 datos["ciudad"] = value
 
-    # fallback ciudad (por si viene abajo)
+    # =========================
+    # RESPALDOS
+    # =========================
+
+    # ciudad desde texto
     if not datos["ciudad"]:
         for p in doc.paragraphs:
             t = p.text.strip()
             if "Colombia" in t:
                 datos["ciudad"] = t.replace(", Colombia", "").strip()
 
-    # fallback nombre
+    # nombre desde texto (si no vino en tabla)
+    if not datos["nombre"]:
+        for p in doc.paragraphs:
+            t = p.text.strip()
+            if t.isupper() and es_nombre_valido(t):
+                datos["nombre"] = limpiar_nombre(t)
+                break
+
+    # fallback final
     if not datos["nombre"]:
         datos["nombre"] = "CLIENTE"
 
     return datos
+
 # =========================
 # DETECTAR SERVICIO (CLAVE)
 # =========================
