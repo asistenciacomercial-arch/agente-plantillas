@@ -226,8 +226,6 @@ async def procesar(file: UploadFile = File(...)):
 
         file.file.close()
 
-        doc = Document(temp)
-
         datos = extraer_datos(doc)
         
         print("DATOS EXTRAIDOS:", datos)
