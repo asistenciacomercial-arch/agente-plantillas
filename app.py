@@ -225,11 +225,11 @@ async def procesar(file: UploadFile = File(...)):
             shutil.copyfileobj(file.file, buffer)
 
         file.file.close()
-
+        doc = Document(temp)
         datos = extraer_datos(doc)
         
         print("DATOS EXTRAIDOS:", datos)
-        
+ 
         servicio = detectar_servicio(doc)
         detalle = detectar_detalle(doc)
         modalidad = detectar_modalidad(doc)
