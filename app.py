@@ -51,43 +51,51 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
-    # 🔥 USAR SOLO LA PRIMERA TABLA
     tabla = doc.tables[0]
 
     for row in tabla.rows:
         cells = [c.text.strip() for c in row.cells]
 
-        # evitar filas vacías
-        if not any(cells):
-            continue
+        # 🔥 recorrer de 2 en 2 (clave total)
+        for i in range(0, len(cells), 2):
 
-        # 🔥 CONTACTO → nombre
-        if len(cells) >= 2 and cells[0].lower() == "contacto":
-            datos["nombre"] = limpiar_nombre(cells[1])
+            if i + 1 >= len(cells):
+                continue
 
-        # 🔥 COMPAÑIA / EDIFICIO
-        elif len(cells) >= 2 and ("compañía" in cells[0].lower() or "edificio" in cells[0].lower()):
-            datos["compania"] = cells[1].upper()
+            label = cells[i].lower()
+            valor = cells[i + 1].strip()
 
-        # 🔥 EMAIL
-        elif len(cells) >= 2 and "mail" in cells[0].lower():
-            datos["correo"] = cells[1]
+            if not valor:
+                continue
 
-        # 🔥 CARGO + TELÉFONO (misma fila)
-        elif len(cells) >= 4 and "cargo" in cells[0].lower():
-            datos["cargo"] = cells[1]
+            # 🔥 NOMBRE
+            if "contacto" in label:
+                datos["nombre"] = limpiar_nombre(valor)
 
-            # columna 3 → Teléfono
-            if "tel" in cells[2].lower():
-                datos["telefono"] = cells[3].replace(" ", "")
+            # 🔥 EMPRESA
+            elif "compañ" in label or "edificio" in label:
+                datos["compania"] = valor.upper()
 
-        # 🔥 CIUDAD (si está en tabla)
-        elif len(cells) >= 2 and "ciudad" in cells[0].lower():
-            datos["ciudad"] = cells[1]
+            # 🔥 CORREO
+            elif "mail" in label or "correo" in label:
+                datos["correo"] = valor
 
-    print("DATOS TABLA:", datos)
+            # 🔥 TELÉFONO
+            elif "tel" in label or "cel" in label:
+                datos["telefono"] = valor.replace(" ", "")
+
+            # 🔥 CARGO
+            elif "cargo" in label:
+                datos["cargo"] = valor
+
+            # 🔥 CIUDAD
+            elif "ciudad" in label:
+                datos["ciudad"] = valor
+
+    print("DATOS BIEN EXTRAIDOS:", datos)
 
     return datos
+    
 # =========================
 # DETECCIÓN SERVICIO
 # =========================
