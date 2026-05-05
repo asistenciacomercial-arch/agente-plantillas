@@ -7,8 +7,9 @@ from datetime import datetime
 
 app = FastAPI()
 
+
 # =========================
-# EXTRAER DATOS BIEN (TABLA)
+# EXTRAER DATOS
 # =========================
 def extraer_datos(doc):
     datos = {
@@ -18,7 +19,6 @@ def extraer_datos(doc):
         "correo": "",
         "telefono": "",
         "ciudad": "",
-        "direccion": ""
     }
 
     for table in doc.tables:
@@ -36,68 +36,24 @@ def extraer_datos(doc):
                     continue
 
                 if "contacto" in campo:
-                    datos["nombre"] = limpiar_nombre(valor)
+                    datos["nombre"] = valor.upper()
 
                 elif "cargo" in campo:
                     datos["cargo"] = valor
 
-                elif "compañía" in campo or "compania" in campo:
+                elif "compañ" in campo:
                     datos["compania"] = valor.upper()
 
                 elif "mail" in campo or "correo" in campo:
                     datos["correo"] = valor
 
-                elif "teléfono" in campo or "telefono" in campo:
+                elif "tel" in campo:
                     datos["telefono"] = valor
 
                 elif "ciudad" in campo:
                     datos["ciudad"] = valor
 
-                elif "dirección" in campo or "direccion" in campo:
-                    datos["direccion"] = valor
-
     return datos
-
-
-# =========================
-# LIMPIAR NOMBRE
-# =========================
-def limpiar_nombre(nombre):
-    return (
-        nombre.replace("Sr.", "")
-        .replace("Sra.", "")
-        .replace("Dr.", "")
-        .replace("Dra.", "")
-        .strip()
-        .upper()
-    )
-
-
-# =========================
-# PRIMER NOMBRE
-# =========================
-def primer_nombre(nombre):
-    return nombre.split()[0].capitalize() if nombre else ""
-
-
-# =========================
-# TRATAMIENTO
-# =========================
-def obtener_tratamiento(cargo):
-    cargo = cargo.lower()
-
-    if "presidente" in cargo or "gerente" in cargo or "director" in cargo:
-        return "Doctor"
-    return "Señor"
-
-
-# =========================
-# SALUDO
-# =========================
-def obtener_saludo(tratamiento):
-    if tratamiento == "Doctor":
-        return "Estimado"
-    return "Estimado"
 
 
 # =========================
@@ -113,53 +69,53 @@ def fecha_es():
 
 
 # =========================
-# REEMPLAZO SIN DAÑAR FORMATO
+# REEMPLAZO SEGURO (NO ROMPE DOCX)
 # =========================
-def reemplazar_en_doc(doc, data):
-    def reemplazar_texto(parrafo):
-        texto = parrafo.text
-        for key, val in data.items():
-            if key in texto:
-                texto = texto.replace(key, val)
+def reemplazar(doc, data):
+    def procesar(p):
+        texto = p.text
+        nuevo = texto
 
-        # 🔥 BORRAR RUNS SIN ROMPER DOCX
-        if parrafo.text != texto:
-            for run in parrafo.runs:
-                run.text = ""
-            parrafo.runs[0].text = texto
+        for k, v in data.items():
+            nuevo = nuevo.replace(k, v)
 
-    # párrafos normales
+        if nuevo != texto:
+            # 🔥 esto evita corrupción
+            p.clear()
+            p.add_run(nuevo)
+
     for p in doc.paragraphs:
-        reemplazar_texto(p)
+        procesar(p)
 
-    # tablas
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for p in cell.paragraphs:
-                    reemplazar_texto(p)
-                    
+    for t in doc.tables:
+        for r in t.rows:
+            for c in r.cells:
+                for p in c.paragraphs:
+                    procesar(p)
+
+
 # =========================
 # API
 # =========================
 @app.post("/procesar/")
 async def procesar(file: UploadFile = File(...)):
     try:
-        temp = "temp.docx"
-        shutil.copyfileobj(file.file, open(temp, "wb"))
+        temp = "entrada.docx"
+        output = "resultado.docx"
 
+        # 🔥 guardar archivo correctamente (IMPORTANTE)
+        with open(temp, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        file.file.close()
+
+        # 🔥 leer documento
         doc = Document(temp)
 
         datos = extraer_datos(doc)
 
-        # VALIDACIÓN
-        if not datos["nombre"]:
-            return {"error": "No se pudo extraer el nombre"}
-        if not datos["compania"]:
-            return {"error": "No se pudo extraer la compañía"}
-
-        tratamiento = obtener_tratamiento(datos["cargo"])
-        saludo = obtener_saludo(tratamiento)
+        # DEBUG (te ayuda a ver si está leyendo bien)
+        print("DATOS EXTRAIDOS:", datos)
 
         plantilla = "plantillas/vigilancia_sin_arma_m.docx"
 
@@ -168,25 +124,28 @@ async def procesar(file: UploadFile = File(...)):
         reemplazos = {
             "{{consecutivo}}": datetime.now().strftime("%Y%m%d%H%M"),
             "{{fecha}}": fecha_es(),
-            "{{tratamiento}}": tratamiento,
             "{{nombre}}": datos["nombre"],
             "{{cargo}}": datos["cargo"],
             "{{compania}}": datos["compania"],
             "{{correo}}": datos["correo"],
             "{{telefono}}": datos["telefono"],
             "{{ciudad}}": datos["ciudad"],
-            "{{direccion}}": datos["direccion"],
-            "{{saludo}}": saludo,
-            "{{primer_nombre}}": primer_nombre(datos["nombre"]),
             "{{alcance}}": datos["ciudad"],
         }
 
-        reemplazar_en_doc(doc_final, reemplazos)
+        reemplazar(doc_final, reemplazos)
 
-        output = "resultado.docx"
+        # 🔥 eliminar anterior si existe
+        if os.path.exists(output):
+            os.remove(output)
+
         doc_final.save(output)
 
-        return FileResponse(output, filename="resultado.docx")
+        return FileResponse(
+            output,
+            filename="resultado.docx",
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
 
     except Exception as e:
         return {"error": str(e)}
