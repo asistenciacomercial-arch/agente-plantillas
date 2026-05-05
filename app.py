@@ -1,8 +1,9 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from docx import Document
+from docxtpl import DocxTemplate
+from io import BytesIO
 import shutil
-import os
 from datetime import datetime
 
 app = FastAPI()
@@ -219,48 +220,62 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
 async def procesar(file: UploadFile = File(...)):
     try:
         temp = "entrada.docx"
-        output = "resultado.docx"
 
+        # guardar archivo
         with open(temp, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
         file.file.close()
+
+        # leer levantamiento
         doc = Document(temp)
+
         datos = extraer_datos(doc)
-        
+
         print("DATOS EXTRAIDOS:", datos)
- 
+
         servicio = detectar_servicio(doc)
         detalle = detectar_detalle(doc)
         modalidad = detectar_modalidad(doc)
-        
+
         print("SERVICIO:", servicio)
         print("DETALLE:", detalle)
         print("MODALIDAD:", modalidad)
-        
-        plantilla = seleccionar_plantilla(servicio, detalle, modalidad)
-        from docxtpl import DocxTemplate
-        tratamiento = obtener_tratamiento(datos["cargo"])
 
+        # seleccionar plantilla
+        plantilla = seleccionar_plantilla(servicio, detalle, modalidad)
+
+        # 🔥 crear reemplazos (ESTO TE FALTABA)
         reemplazos = {
             "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
             "fecha": fecha_es(),
-            "tratamiento": tratamiento,
-            "nombre": datos["nombre"],
-            "cargo": datos["cargo"],
-            "compania": datos["compania"],
-            "correo": datos["correo"],
-            "telefono": datos["telefono"],
-            "ciudad": datos["ciudad"],
-            "alcance": datos["ciudad"],
+            "nombre": datos.get("nombre", ""),
+            "cargo": datos.get("cargo", ""),
+            "compania": datos.get("compania", ""),
+            "correo": datos.get("correo", ""),
+            "telefono": datos.get("telefono", ""),
+            "ciudad": datos.get("ciudad", ""),
+            "alcance": datos.get("ciudad", ""),
+            "tratamiento": obtener_tratamiento(datos.get("cargo", "")),
             "saludo": "Estimado",
-            "nombre_corto": datos["nombre"].split()[0].capitalize()
+            "nombre_corto": datos.get("nombre", "").split(" ")[0].capitalize() if datos.get("nombre") else ""
         }
+
+        # generar documento
         doc_tpl = DocxTemplate(plantilla)
         doc_tpl.render(reemplazos)
-        doc_tpl.save(output)
 
-        return FileResponse(output, filename="resultado.docx")
+        buffer = BytesIO()
+        doc_tpl.save(buffer)
+        buffer.seek(0)
+
+        return StreamingResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": "attachment; filename=resultado.docx"
+            }
+        )
 
     except Exception as e:
         return {"error": str(e)}
