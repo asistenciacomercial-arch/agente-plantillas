@@ -53,41 +53,47 @@ def extraer_datos(doc):
 
     for table in doc.tables:
         for row in table.rows:
+            textos = [c.text.strip() for c in row.cells]
 
-            cells = row.cells
+            for i, texto in enumerate(textos):
+                t = texto.lower()
 
-            # limpiar textos
-            textos = [c.text.strip() for c in cells]
+                # 🔥 NOMBRE
+                if "contacto" in t and i + 1 < len(textos):
+                    datos["nombre"] = limpiar_nombre(textos[i + 1])
 
-            # 🔥 CONTACTO (nombre)
-            if len(cells) >= 2 and "contacto" in textos[0].lower():
-                datos["nombre"] = limpiar_nombre(textos[1])
+                # 🔥 EMPRESA
+                elif "compañ" in t or "edificio" in t:
+                    if i + 1 < len(textos):
+                        datos["compania"] = textos[i + 1].upper()
 
-            # 🔥 COMPAÑIA
-            if len(cells) >= 2 and ("compañ" in textos[0].lower() or "edificio" in textos[0].lower()):
-                datos["compania"] = textos[1].upper()
+                # 🔥 CORREO (muchas variantes)
+                elif any(x in t for x in ["mail", "correo"]):
+                    if i + 1 < len(textos):
+                        datos["correo"] = textos[i + 1]
 
-            # 🔥 EMAIL
-            if len(cells) >= 2 and "mail" in textos[0].lower():
-                datos["correo"] = textos[1]
+                # 🔥 TELÉFONO (muchas variantes)
+                elif any(x in t for x in ["tel", "cel"]):
+                    if i + 1 < len(textos):
+                        datos["telefono"] = textos[i + 1].replace(" ", "")
 
-            # 🔥 CARGO + TELEFONO (fila de 4 columnas)
-            if len(cells) >= 4:
-                if "cargo" in textos[0].lower():
-                    datos["cargo"] = textos[1]
+                # 🔥 CARGO (variantes)
+                elif any(x in t for x in ["cargo", "funcion"]):
+                    if i + 1 < len(textos):
+                        datos["cargo"] = textos[i + 1]
 
-                if "tel" in textos[2].lower():
-                    datos["telefono"] = textos[3].replace(" ", "")
-
-            # 🔥 CIUDAD
-            if len(cells) >= 2 and "ciudad" in textos[0].lower():
-                datos["ciudad"] = textos[1]
+                # 🔥 CIUDAD
+                elif "ciudad" in t:
+                    if i + 1 < len(textos):
+                        datos["ciudad"] = textos[i + 1]
 
     # fallback ciudad
     if not datos["ciudad"]:
         for p in doc.paragraphs:
             if "colombia" in p.text.lower():
                 datos["ciudad"] = p.text.replace(", Colombia", "").strip()
+
+    print("DATOS FINALES:", datos)  # 👈 IMPORTANTE DEBUG
 
     return datos
 # =========================
