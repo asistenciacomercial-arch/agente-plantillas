@@ -51,32 +51,44 @@ def extraer_datos(doc):
         "correo": "",
         "telefono": "",
         "ciudad": "",
+        "direccion": ""
     }
+
+    def limpiar(txt):
+        return (txt or "").strip()
+
+    def normalizar_campo(txt):
+        return limpiar(txt).lower().replace(":", "").replace("  ", " ")
 
     for table in doc.tables:
         for row in table.rows:
-            celdas = [c.text.strip() for c in row.cells]
+            celdas = [limpiar(c.text) for c in row.cells]
 
-            for i in range(0, len(celdas), 2):
-                if i + 1 >= len(celdas):
-                    continue
+            # Procesar en pares: (0,1) y (2,3)
+            pares = []
+            if len(celdas) >= 2:
+                pares.append((celdas[0], celdas[1]))
+            if len(celdas) >= 4:
+                pares.append((celdas[2], celdas[3]))
 
-                campo = celdas[i].lower()
-                valor = celdas[i + 1].strip()
+            for campo_raw, valor_raw in pares:
+                campo = normalizar_campo(campo_raw)
+                valor = limpiar(valor_raw)
 
                 if not valor:
                     continue
 
+                # 🔥 MAPEO EXACTO A TU FORMATO
                 if "contacto" in campo:
                     datos["nombre"] = limpiar_nombre(valor)
 
-                elif "cargo" in campo:
+                elif campo == "cargo":
                     datos["cargo"] = valor
 
-                elif "compañ" in campo:
+                elif "compañ" in campo or "compania" in campo:
                     datos["compania"] = valor.upper()
 
-                elif "mail" in campo or "correo" in campo:
+                elif "e-mail" in campo or "email" in campo or "correo" in campo:
                     datos["correo"] = valor
 
                 elif "tel" in campo:
@@ -85,8 +97,11 @@ def extraer_datos(doc):
                 elif "ciudad" in campo:
                     datos["ciudad"] = valor
 
-    return datos
+                elif "dirección" in campo or "direccion" in campo:
+                    datos["direccion"] = valor
 
+    return datos
+    
 # =========================
 # DETECTAR SERVICIO (CLAVE)
 # =========================
