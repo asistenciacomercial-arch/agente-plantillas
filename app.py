@@ -116,22 +116,29 @@ def fecha_es():
 # REEMPLAZO SIN DAÑAR FORMATO
 # =========================
 def reemplazar_en_doc(doc, data):
-    for p in doc.paragraphs:
+    def reemplazar_texto(parrafo):
+        texto = parrafo.text
         for key, val in data.items():
-            if key in p.text:
-                for run in p.runs:
-                    run.text = run.text.replace(key, val)
+            if key in texto:
+                texto = texto.replace(key, val)
 
+        # 🔥 BORRAR RUNS SIN ROMPER DOCX
+        if parrafo.text != texto:
+            for run in parrafo.runs:
+                run.text = ""
+            parrafo.runs[0].text = texto
+
+    # párrafos normales
+    for p in doc.paragraphs:
+        reemplazar_texto(p)
+
+    # tablas
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for p in cell.paragraphs:
-                    for key, val in data.items():
-                        if key in p.text:
-                            for run in p.runs:
-                                run.text = run.text.replace(key, val)
-
-
+                    reemplazar_texto(p)
+                    
 # =========================
 # API
 # =========================
