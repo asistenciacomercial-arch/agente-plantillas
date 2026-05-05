@@ -71,22 +71,7 @@ def es_nombre_valido(texto):
 # =========================
 # EXTRAER DATOS TABLA
 # =========================
-import re
-
 def extraer_datos(doc):
-    texto = ""
-
-    # leer todo (párrafos + tablas)
-    for p in doc.paragraphs:
-        texto += p.text + "\n"
-
-    for t in doc.tables:
-        for r in t.rows:
-            for c in r.cells:
-                texto += c.text + "\n"
-
-    lineas = [l.strip() for l in texto.split("\n") if l.strip()]
-
     datos = {
         "nombre": "",
         "cargo": "",
@@ -96,70 +81,56 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
-    # =====================
-    # NOMBRE → línea en mayúsculas
-    # =====================
-    for l in lineas:
+    for table in doc.tables:
+        for row in table.rows:
+            celdas = [c.text.strip() for c in row.cells]
 
-        # PRIORIDAD 1: con SR / DOCTOR
-        if "SR." in l.upper() or "SEÑOR" in l.upper() or "DOCTOR" in l.upper():
-            limpio = (
-                l.upper()
-                .replace("SR.", "")
-                .replace("SEÑOR", "")
-                .replace("DOCTOR", "")
-                .strip()
-            )
-    
-            if es_nombre_valido(limpio):
-                datos["nombre"] = limpio
-                break
-    
-        # PRIORIDAD 2: línea en mayúsculas válida
-        if es_nombre_valido(l):
-            datos["nombre"] = l
-            break
+            # recorrer en pares (campo - valor)
+            for i in range(0, len(celdas) - 1):
+                campo = celdas[i].lower()
+                valor = celdas[i + 1].strip()
 
-    # =====================
-    # COMPAÑÍA → EDIFICIO
-    # =====================
-    for l in lineas:
-        if "EDIFICIO" in l.upper():
-            datos["compania"] = l
-            break
+                if not valor:
+                    continue
 
-    # =====================
-    # TELÉFONO
-    # =====================
-    for l in lineas:
-        limpio = l.replace(" ", "")
-        if re.fullmatch(r"3\d{9}", limpio):
-            datos["telefono"] = l
-            break
+                # =====================
+                # NOMBRE
+                # =====================
+                if "cliente" in campo or "contacto" in campo:
+                    datos["nombre"] = limpiar_nombre(valor)
 
-    # =====================
-    # CIUDAD
-    # =====================
-    for l in lineas:
-        if "COLOMBIA" in l.upper():
-            datos["ciudad"] = l.replace(", Colombia", "").strip()
+                # =====================
+                # CARGO
+                # =====================
+                elif "cargo" in campo:
+                    datos["cargo"] = valor
 
-    # =====================
-    # CORREO
-    # =====================
-    match = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", texto)
-    if match:
-        datos["correo"] = match.group()
+                # =====================
+                # COMPAÑÍA
+                # =====================
+                elif "compañ" in campo or "empresa" in campo:
+                    datos["compania"] = valor.upper()
 
-    # =====================
-    # CARGO (si existe)
-    # =====================
-    for l in lineas:
-        if any(x in l.lower() for x in ["gerente", "director", "presidente"]):
-            datos["cargo"] = l
-            break
+                # =====================
+                # CORREO
+                # =====================
+                elif "mail" in campo or "correo" in campo:
+                    datos["correo"] = valor
+
+                # =====================
+                # TELÉFONO
+                # =====================
+                elif "tel" in campo or "cel" in campo:
+                    datos["telefono"] = valor
+
+                # =====================
+                # CIUDAD
+                # =====================
+                elif "ciudad" in campo:
+                    datos["ciudad"] = valor
 
     return datos
+    
 # =========================
 # DETECTAR SERVICIO (CLAVE)
 # =========================
@@ -184,6 +155,7 @@ def detectar_servicio(doc):
                 return "monitoreo"
 
     return "vigilancia"  # fallback
+    
 # DETECTAR TIPO
 # =========================
 def detectar_tipo(doc):
