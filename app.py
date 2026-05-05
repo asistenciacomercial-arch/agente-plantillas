@@ -86,16 +86,33 @@ async def procesar(file: UploadFile = File(...)):
         plantilla = seleccionar_plantilla(texto)
 
         # 🔥 EXTRAER DATOS (básico - puedes mejorar)
-        data = {
-            "nombre": "Cliente Ejemplo",
-            "cargo": "Director",
-            "compania": "Empresa XYZ",
-            "correo": "correo@email.com",
-            "telefono": "123456789",
-            "ciudad": "Bogotá",
-            "alcance": texto[:500]
-        }
+        data = extraer_datos_tabla(doc)
 
+        # fallback si algo no se detecta
+        for k in data:
+            if not data[k]:
+                data[k] = "No especificado"
+        texto_lower = texto.lower()
+
+        if "escolta" in texto_lower:
+            data["alcance"] = "Servicio de escolta con protección personal y acompañamiento según requerimiento."
+        elif "vigilancia" in texto_lower:
+            data["alcance"] = "Servicio de vigilancia física con control de accesos, rondas de seguridad y prevención."
+        elif "monitoreo" in texto_lower:
+            data["alcance"] = "Servicio de monitoreo remoto de sistemas de seguridad electrónica."
+        else:
+            data["alcance"] = "Servicio de seguridad adaptado a las necesidades del cliente."
+        if "mensual" in texto_lower:
+            data["modalidad"] = "Mensual"
+        elif "eventual" in texto_lower:
+            data["modalidad"] = "Eventual"
+        elif "fortalecimiento" in texto_lower:
+            data["modalidad"] = "Fortalecimiento"
+        elif "valor agregado" in texto_lower:
+            data["modalidad"] = "Valor agregado"
+        else:
+            data["modalidad"] = ""
+        
         # Variables dinámicas
         consecutivo = generar_consecutivo()
         tratamiento = obtener_tratamiento(data["nombre"], data["cargo"])
