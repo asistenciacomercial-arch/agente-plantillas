@@ -23,37 +23,42 @@ def extraer_datos(doc):
         "compania": "",
         "correo": "",
         "telefono": "",
-        "ciudad": "",
-        "servicio": ""
+        "ciudad": ""
     }
 
     for table in doc.tables:
         for row in table.rows:
-            celdas = [c.text.strip() for c in row.cells]
+
+            # solo celdas con texto
+            celdas = [c.text.strip() for c in row.cells if c.text.strip()]
+
+            # 🔒 evitar errores
+            if not celdas:
+                continue
 
             texto = " ".join(celdas).lower()
 
+            # 🔥 BUSCAR SIN USAR INDICES
             if "contacto" in texto:
-                datos["nombre"] = celdas[-1]
+                datos["nombre"] = celdas[-1] if len(celdas) >= 1 else ""
 
             elif "cargo" in texto:
-                datos["cargo"] = celdas[-1]
+                datos["cargo"] = celdas[-1] if len(celdas) >= 1 else ""
 
             elif "compañía" in texto or "compania" in texto:
-                datos["compania"] = celdas[-1]
+                datos["compania"] = celdas[-1] if len(celdas) >= 1 else ""
 
             elif "e-mail" in texto or "correo" in texto:
-                datos["correo"] = celdas[-1]
+                datos["correo"] = celdas[-1] if len(celdas) >= 1 else ""
 
             elif "teléfono" in texto or "telefono" in texto:
-                datos["telefono"] = celdas[-1]
+                datos["telefono"] = celdas[-1] if len(celdas) >= 1 else ""
 
             elif "ciudad" in texto:
-                datos["ciudad"] = celdas[-1]
+                datos["ciudad"] = celdas[-1] if len(celdas) >= 1 else ""
 
     return datos
-
-
+    
 # -------------------------
 # DETECTAR SERVICIO (X)
 # -------------------------
