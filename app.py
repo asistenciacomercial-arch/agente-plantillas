@@ -46,7 +46,11 @@ def fecha_es():
 # =========================
 # EXTRAER DATOS TABLA
 # =========================
+import re
+
 def extraer_datos(doc):
+    texto = "\n".join([p.text for p in doc.paragraphs])
+
     datos = {
         "nombre": "",
         "cargo": "",
@@ -54,54 +58,56 @@ def extraer_datos(doc):
         "correo": "",
         "telefono": "",
         "ciudad": "",
-        "direccion": ""
     }
 
-    def limpiar(txt):
-        return (txt or "").strip()
+    lineas = [l.strip() for l in texto.split("\n") if l.strip()]
 
-    def normalizar_campo(txt):
-        return limpiar(txt).lower().replace(":", "").replace("  ", " ")
+    # =====================
+    # NOMBRE (línea con Sr / Doctor)
+    # =====================
+    for l in lineas:
+        if "SR." in l.upper() or "SEÑOR" in l.upper() or "DOCTOR" in l.upper():
+            datos["nombre"] = limpiar_nombre(l)
+            break
 
-    for table in doc.tables:
-        for row in table.rows:
-            celdas = [limpiar(c.text) for c in row.cells]
+    # =====================
+    # TELÉFONO
+    # =====================
+    for l in lineas:
+        if re.search(r"\b3\d{9}\b", l.replace(" ", "")):
+            datos["telefono"] = l
+            break
 
-            # Procesar en pares: (0,1) y (2,3)
-            pares = []
-            if len(celdas) >= 2:
-                pares.append((celdas[0], celdas[1]))
-            if len(celdas) >= 4:
-                pares.append((celdas[2], celdas[3]))
+    # =====================
+    # CIUDAD
+    # =====================
+    for l in lineas:
+        if "COLOMBIA" in l.upper():
+            datos["ciudad"] = l.split(",")[0]
+            break
 
-            for campo_raw, valor_raw in pares:
-                campo = normalizar_campo(campo_raw)
-                valor = limpiar(valor_raw)
+    # =====================
+    # CORREO
+    # =====================
+    match = re.search(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", texto)
+    if match:
+        datos["correo"] = match.group()
 
-                if not valor:
-                    continue
+    # =====================
+    # CARGO (heurística)
+    # =====================
+    for l in lineas:
+        if any(p in l.lower() for p in ["gerente", "director", "presidente", "jefe"]):
+            datos["cargo"] = l
+            break
 
-                # 🔥 MAPEO EXACTO A TU FORMATO
-                if "contacto" in campo:
-                    datos["nombre"] = limpiar_nombre(valor)
-
-                elif campo == "cargo":
-                    datos["cargo"] = valor
-
-                elif "compañ" in campo or "compania" in campo:
-                    datos["compania"] = valor.upper()
-
-                elif "e-mail" in campo or "email" in campo or "correo" in campo:
-                    datos["correo"] = valor
-
-                elif "tel" in campo:
-                    datos["telefono"] = valor
-
-                elif "ciudad" in campo:
-                    datos["ciudad"] = valor
-
-                elif "dirección" in campo or "direccion" in campo:
-                    datos["direccion"] = valor
+    # =====================
+    # COMPAÑÍA
+    # =====================
+    for l in lineas:
+        if "EDIFICIO" in l.upper():
+            datos["compania"] = l
+            break
 
     return datos
     
