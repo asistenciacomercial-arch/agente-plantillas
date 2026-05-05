@@ -41,35 +41,44 @@ def extraer_datos(doc):
 
     for table in doc.tables:
         for row in table.rows:
-            cells = [c.text.strip() for c in row.cells]
+            cells = [c.text.strip() for c in row.cells if c.text.strip()]
+
+            # ⚠️ SI NO HAY SUFICIENTES CELDAS → SALTA
+            if len(cells) < 2:
+                continue
+
             texto_fila = " ".join(cells).lower()
 
-            if "contacto" in texto_fila:
-                datos["nombre"] = limpiar_nombre(cells[-1])
+            try:
+                if "contacto" in texto_fila:
+                    datos["nombre"] = limpiar_nombre(cells[-1])
 
-            elif "cargo" in texto_fila:
-                datos["cargo"] = cells[-1]
+                elif "cargo" in texto_fila:
+                    datos["cargo"] = cells[-1]
 
-            elif "compañía" in texto_fila:
-                datos["compania"] = cells[-1].upper()
+                elif "compañía" in texto_fila:
+                    datos["compania"] = cells[-1].upper()
 
-            elif "teléfono" in texto_fila:
-                datos["telefono"] = cells[-1]
+                elif "teléfono" in texto_fila:
+                    datos["telefono"] = cells[-1]
 
-            elif "ciudad" in texto_fila:
-                datos["ciudad"] = cells[-1]
+                elif "ciudad" in texto_fila:
+                    datos["ciudad"] = cells[-1]
 
-            elif "mail" in texto_fila or "correo" in texto_fila:
-                datos["correo"] = cells[-1]
+                elif "mail" in texto_fila or "correo" in texto_fila:
+                    datos["correo"] = cells[-1]
 
-            elif "tipo de servicio" in texto_fila:
-                datos["servicio"] = cells[-1].lower()
+                elif "tipo de servicio" in texto_fila:
+                    datos["servicio"] = cells[-1].lower()
 
-            elif "tiempo de servicio" in texto_fila:
-                datos["modalidad"] = cells[-1].lower()
+                elif "tiempo de servicio" in texto_fila:
+                    datos["modalidad"] = cells[-1].lower()
+
+            except Exception:
+                # evita que una fila dañada tumbe todo
+                continue
 
     return datos
-
 # ----------------------------
 # DETECCIÓN DE DETALLES
 # ----------------------------
