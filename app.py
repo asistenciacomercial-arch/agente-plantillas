@@ -1,40 +1,15 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
 import shutil
-import os
 from docx import Document
 from docxtpl import DocxTemplate
 from datetime import datetime
-
-# Google Sheets
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 
 app = FastAPI()
 
 
 # =========================
-# 🔹 GOOGLE SHEETS
-# =========================
-def obtener_consecutivo():
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive"
-    ]
-
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credenciales.json", scope)
-    client = gspread.authorize(creds)
-
-    sheet = client.open("TU_SHEET").sheet1
-
-    # 🔥 SOLO LEE (turnero)
-    consecutivo = sheet.acell("A1").value
-
-    return consecutivo if consecutivo else "SIN-NUMERO"
-
-
-# =========================
-# 🔹 SALUDO Y TRATAMIENTO
+# 🔹 FUNCIONES AUXILIARES
 # =========================
 def obtener_tratamiento(nombre, cargo):
     nombre = nombre.lower()
@@ -54,16 +29,15 @@ def obtener_saludo(nombre):
     return "Distinguida" if nombre.lower().endswith("a") else "Distinguido"
 
 
-# =========================
-# 🔹 FECHA
-# =========================
 def obtener_fecha():
     return datetime.now().strftime("%d de %B de %Y")
 
 
-# =========================
-# 🔹 DETECTAR PLANTILLA
-# =========================
+def generar_consecutivo():
+    # 🔥 simple (puedes cambiar luego)
+    return datetime.now().strftime("%Y%m%d%H%M")
+
+
 def seleccionar_plantilla(texto):
     texto = texto.lower()
 
@@ -108,10 +82,10 @@ async def procesar(file: UploadFile = File(...)):
         doc = Document(temp_path)
         texto = "\n".join([p.text for p in doc.paragraphs])
 
-        # 🔥 SELECCIONAR PLANTILLA AUTOMÁTICA
+        # Seleccionar plantilla
         plantilla = seleccionar_plantilla(texto)
 
-        # 🔥 EXTRAER DATOS (simple - puedes mejorar luego)
+        # 🔥 EXTRAER DATOS (básico - puedes mejorar)
         data = {
             "nombre": "Cliente Ejemplo",
             "cargo": "Director",
@@ -119,16 +93,16 @@ async def procesar(file: UploadFile = File(...)):
             "correo": "correo@email.com",
             "telefono": "123456789",
             "ciudad": "Bogotá",
-            "alcance": texto[:500]  # ejemplo
+            "alcance": texto[:500]
         }
 
-        # 🔥 VARIABLES DINÁMICAS
-        consecutivo = obtener_consecutivo()
+        # Variables dinámicas
+        consecutivo = generar_consecutivo()
         tratamiento = obtener_tratamiento(data["nombre"], data["cargo"])
         saludo = obtener_saludo(data["nombre"])
         fecha = obtener_fecha()
 
-        # 🔥 RENDER DOCX
+        # Generar documento
         doc = DocxTemplate(plantilla)
 
         context = {
