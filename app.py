@@ -81,62 +81,22 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
-    # recorrer TODAS las tablas
-    for table in doc.tables:
-        for row in table.rows:
-            if len(row.cells) < 2:
-                continue
+    try:
+        tabla = doc.tables[0]  # 👈 tu formato siempre usa la primera tabla
 
-            label = row.cells[0].text.strip().lower()
-            value = row.cells[1].text.strip()
+        # 🔥 AJUSTA ESTAS POSICIONES SEGÚN TU FORMATO REAL
 
-            if not value:
-                continue
+        datos["nombre"] = limpiar_nombre(tabla.cell(1, 1).text.strip())
+        datos["cargo"] = tabla.cell(2, 1).text.strip()
+        datos["compania"] = tabla.cell(3, 1).text.strip().upper()
+        datos["correo"] = tabla.cell(4, 1).text.strip()
+        datos["telefono"] = tabla.cell(5, 1).text.strip().replace(" ", "")
+        datos["ciudad"] = tabla.cell(6, 1).text.strip()
 
-            if "cliente" in label or "contacto" in label:
-                if es_nombre_valido(value):
-                    datos["nombre"] = limpiar_nombre(value)
-
-            elif "cargo" in label:
-                datos["cargo"] = value
-
-            elif "empresa" in label or "edificio" in label:
-                datos["compania"] = value.upper()
-
-            elif "correo" in label or "mail" in label:
-                datos["correo"] = value
-
-            elif "tel" in label:
-                datos["telefono"] = value.replace(" ", "")
-
-            elif "ciudad" in label:
-                datos["ciudad"] = value
-
-    # =========================
-    # RESPALDOS
-    # =========================
-
-    # ciudad desde texto
-    if not datos["ciudad"]:
-        for p in doc.paragraphs:
-            t = p.text.strip()
-            if "Colombia" in t:
-                datos["ciudad"] = t.replace(", Colombia", "").strip()
-
-    # nombre desde texto (si no vino en tabla)
-    if not datos["nombre"]:
-        for p in doc.paragraphs:
-            t = p.text.strip()
-            if t.isupper() and es_nombre_valido(t):
-                datos["nombre"] = limpiar_nombre(t)
-                break
-
-    # fallback final
-    if not datos["nombre"]:
-        datos["nombre"] = "CLIENTE"
+    except Exception as e:
+        print("ERROR EXTRAYENDO TABLA:", e)
 
     return datos
-
 # =========================
 # DETECTAR SERVICIO (CLAVE)
 # =========================
