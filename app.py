@@ -151,10 +151,10 @@ def extraer_datos(doc):
         # NOMBRE (formato real: mayúscula, corto)
         # =====================
         if not datos["nombre"]:
-            if l.isupper() and 2 <= len(l.split()) <= 4:
-                if "EDIFICIO" not in l_up:
-                    datos["nombre"] = limpiar_nombre(l)
-
+            if l.isupper() and 2 <= len(l.split()) <= 3:
+                if all(p.isalpha() for p in l.split()):
+                    if not any(x in l for x in ["SE", "REQUIERE", "PROPUESTA"]):
+                        datos["nombre"] = limpiar_nombre(l)
         # =====================
         # TELÉFONO
         # =====================
