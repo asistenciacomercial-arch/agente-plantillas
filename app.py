@@ -51,15 +51,14 @@ import re
 def extraer_datos(doc):
     texto = ""
 
-    # 🔥 leer párrafos
+    # leer todo (párrafos + tablas)
     for p in doc.paragraphs:
         texto += p.text + "\n"
 
-    # 🔥 leer tablas (CLAVE)
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                texto += cell.text + "\n"
+    for t in doc.tables:
+        for r in t.rows:
+            for c in r.cells:
+                texto += c.text + "\n"
 
     lineas = [l.strip() for l in texto.split("\n") if l.strip()]
 
@@ -73,11 +72,19 @@ def extraer_datos(doc):
     }
 
     # =====================
-    # NOMBRE (línea con SR o DOCTOR)
+    # NOMBRE → línea en mayúsculas
     # =====================
     for l in lineas:
-        if any(x in l.upper() for x in ["SR.", "SEÑOR", "DOCTOR"]):
-            datos["nombre"] = limpiar_nombre(l)
+        if l.isupper() and len(l.split()) >= 3:
+            datos["nombre"] = l
+            break
+
+    # =====================
+    # COMPAÑÍA → EDIFICIO
+    # =====================
+    for l in lineas:
+        if "EDIFICIO" in l.upper():
+            datos["compania"] = l
             break
 
     # =====================
@@ -85,7 +92,7 @@ def extraer_datos(doc):
     # =====================
     for l in lineas:
         limpio = l.replace(" ", "")
-        if re.match(r"3\d{9}", limpio):
+        if re.fullmatch(r"3\d{9}", limpio):
             datos["telefono"] = l
             break
 
@@ -94,23 +101,16 @@ def extraer_datos(doc):
     # =====================
     for l in lineas:
         if "COLOMBIA" in l.upper():
-            datos["ciudad"] = l.split(",")[0]
+            ciudad = l.replace(", Colombia", "").strip()
+            datos["ciudad"] = ciudad
             break
 
     # =====================
     # CORREO
     # =====================
-    match = re.search(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", texto)
+    match = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", texto)
     if match:
         datos["correo"] = match.group()
-
-    # =====================
-    # COMPAÑÍA
-    # =====================
-    for l in lineas:
-        if "EDIFICIO" in l.upper():
-            datos["compania"] = l
-            break
 
     # =====================
     # CARGO (si existe)
@@ -121,48 +121,6 @@ def extraer_datos(doc):
             break
 
     return datos
-
-    # =====================
-    # TELÉFONO
-    # =====================
-    for l in lineas:
-        if re.search(r"\b3\d{9}\b", l.replace(" ", "")):
-            datos["telefono"] = l
-            break
-
-    # =====================
-    # CIUDAD
-    # =====================
-    for l in lineas:
-        if "COLOMBIA" in l.upper():
-            datos["ciudad"] = l.split(",")[0]
-            break
-
-    # =====================
-    # CORREO
-    # =====================
-    match = re.search(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", texto)
-    if match:
-        datos["correo"] = match.group()
-
-    # =====================
-    # CARGO (heurística)
-    # =====================
-    for l in lineas:
-        if any(p in l.lower() for p in ["gerente", "director", "presidente", "jefe"]):
-            datos["cargo"] = l
-            break
-
-    # =====================
-    # COMPAÑÍA
-    # =====================
-    for l in lineas:
-        if "EDIFICIO" in l.upper():
-            datos["compania"] = l
-            break
-
-    return datos
-    
 # =========================
 # DETECTAR SERVICIO (CLAVE)
 # =========================
@@ -232,6 +190,7 @@ def detectar_modalidad(doc):
         return "f"
 
     return "m"
+    
 # =========================
 # SELECCIONAR PLANTILLA
 # =========================
