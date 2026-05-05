@@ -49,7 +49,19 @@ def fecha_es():
 import re
 
 def extraer_datos(doc):
-    texto = "\n".join([p.text for p in doc.paragraphs])
+    texto = ""
+
+    # 🔥 leer párrafos
+    for p in doc.paragraphs:
+        texto += p.text + "\n"
+
+    # 🔥 leer tablas (CLAVE)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                texto += cell.text + "\n"
+
+    lineas = [l.strip() for l in texto.split("\n") if l.strip()]
 
     datos = {
         "nombre": "",
@@ -60,15 +72,55 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
-    lineas = [l.strip() for l in texto.split("\n") if l.strip()]
-
     # =====================
-    # NOMBRE (línea con Sr / Doctor)
+    # NOMBRE (línea con SR o DOCTOR)
     # =====================
     for l in lineas:
-        if "SR." in l.upper() or "SEÑOR" in l.upper() or "DOCTOR" in l.upper():
+        if any(x in l.upper() for x in ["SR.", "SEÑOR", "DOCTOR"]):
             datos["nombre"] = limpiar_nombre(l)
             break
+
+    # =====================
+    # TELÉFONO
+    # =====================
+    for l in lineas:
+        limpio = l.replace(" ", "")
+        if re.match(r"3\d{9}", limpio):
+            datos["telefono"] = l
+            break
+
+    # =====================
+    # CIUDAD
+    # =====================
+    for l in lineas:
+        if "COLOMBIA" in l.upper():
+            datos["ciudad"] = l.split(",")[0]
+            break
+
+    # =====================
+    # CORREO
+    # =====================
+    match = re.search(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", texto)
+    if match:
+        datos["correo"] = match.group()
+
+    # =====================
+    # COMPAÑÍA
+    # =====================
+    for l in lineas:
+        if "EDIFICIO" in l.upper():
+            datos["compania"] = l
+            break
+
+    # =====================
+    # CARGO (si existe)
+    # =====================
+    for l in lineas:
+        if any(x in l.lower() for x in ["gerente", "director", "presidente"]):
+            datos["cargo"] = l
+            break
+
+    return datos
 
     # =====================
     # TELÉFONO
