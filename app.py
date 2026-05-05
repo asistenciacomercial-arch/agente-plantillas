@@ -23,39 +23,44 @@ def extraer_datos(doc):
         "compania": "",
         "correo": "",
         "telefono": "",
-        "ciudad": ""
+        "ciudad": "",
+        "direccion": ""
     }
 
     for table in doc.tables:
         for row in table.rows:
 
-            # solo celdas con texto
-            celdas = [c.text.strip() for c in row.cells if c.text.strip()]
+            celdas = [c.text.strip() for c in row.cells]
 
-            # 🔒 evitar errores
-            if not celdas:
-                continue
+            # recorrer en pares (campo - valor)
+            for i in range(0, len(celdas), 2):
 
-            texto = " ".join(celdas).lower()
+                if i + 1 >= len(celdas):
+                    continue
 
-            # 🔥 BUSCAR SIN USAR INDICES
-            if "contacto" in texto:
-                datos["nombre"] = celdas[-1] if len(celdas) >= 1 else ""
+                campo = celdas[i].lower()
+                valor = celdas[i + 1].strip()
 
-            elif "cargo" in texto:
-                datos["cargo"] = celdas[-1] if len(celdas) >= 1 else ""
+                if "contacto" in campo:
+                    datos["nombre"] = valor.replace("Sr.", "").strip()
 
-            elif "compañía" in texto or "compania" in texto:
-                datos["compania"] = celdas[-1] if len(celdas) >= 1 else ""
+                elif "cargo" in campo:
+                    datos["cargo"] = valor
 
-            elif "e-mail" in texto or "correo" in texto:
-                datos["correo"] = celdas[-1] if len(celdas) >= 1 else ""
+                elif "compañía" in campo or "compania" in campo:
+                    datos["compania"] = valor
 
-            elif "teléfono" in texto or "telefono" in texto:
-                datos["telefono"] = celdas[-1] if len(celdas) >= 1 else ""
+                elif "e- mail" in campo or "correo" in campo:
+                    datos["correo"] = valor
 
-            elif "ciudad" in texto:
-                datos["ciudad"] = celdas[-1] if len(celdas) >= 1 else ""
+                elif "teléfono" in campo or "telefono" in campo:
+                    datos["telefono"] = valor
+
+                elif "ciudad" in campo:
+                    datos["ciudad"] = valor
+
+                elif "dirección" in campo or "direccion" in campo:
+                    datos["direccion"] = valor
 
     return datos
     
