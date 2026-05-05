@@ -45,9 +45,9 @@ def extraer_datos(doc):
     datos = {}
 
     try:
-        tabla = doc.tables[0]
+        # 🔥 CLAVE: usar la tabla correcta
+        tabla = doc.tables[1]
 
-        # 🔥 EXACTO
         datos["compania"] = tabla.rows[2].cells[1].text.strip()
 
         datos["nombre"] = tabla.rows[3].cells[1].text.strip()
@@ -62,13 +62,11 @@ def extraer_datos(doc):
     except Exception as e:
         print("ERROR TABLA:", e)
 
-    # ciudad fija (tu formato SIEMPRE usa Bogotá)
     datos["ciudad"] = "Bogotá"
 
-    print("DATOS EXTRAIDOS REALES:", datos)
+    print("DATOS REALES:", datos)
 
     return datos
-    
 # =========================
 # DETECCIÓN SERVICIO
 # =========================
