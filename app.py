@@ -87,7 +87,9 @@ def extraer_datos(doc):
         # 🔥 POSICIONES REALES (VERIFICADAS CON TU DOC)
 
         datos["compania"] = tabla.rows[4].cells[1].text.strip().upper()
-        datos["nombre"] = limpiar_nombre(tabla.rows[6].cells[1].text.strip())
+        nombre_raw = tabla.rows[6].cells[1].text.strip()
+        datos["nombre"] = limpiar_nombre(nombre_raw)
+        datos["nombre_completo"] = nombre_raw.upper()
         datos["correo"] = tabla.rows[7].cells[1].text.strip()
         datos["cargo"] = tabla.rows[8].cells[1].text.strip()
         datos["telefono"] = tabla.rows[8].cells[3].text.strip().replace(" ", "")
@@ -256,16 +258,18 @@ async def procesar(file: UploadFile = File(...)):
         reemplazos = {
             "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
             "fecha": fecha_es(),
-            "nombre": nombre,
+            "tratamiento": obtener_tratamiento(datos.get("cargo", "")),
+        
+            # 🔥 ESTE ES EL CLAVE
+            "nombre": datos.get("nombre_completo", "CLIENTE"),
+        
             "cargo": datos.get("cargo", ""),
             "compania": datos.get("compania", ""),
             "correo": datos.get("correo", ""),
             "telefono": datos.get("telefono", ""),
             "ciudad": datos.get("ciudad", ""),
-            "alcance": datos.get("ciudad", ""),
-            "tratamiento": obtener_tratamiento(datos.get("cargo", "")),
-            "saludo": "Estimado",
-            "nombre_corto": nombre.split()[0],
+        
+            "saludo": f"Estimado {obtener_tratamiento(datos.get('cargo',''))} {datos.get('nombre','CLIENTE')}",
         }
 
         # generar documento
