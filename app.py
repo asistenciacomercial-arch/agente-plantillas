@@ -76,14 +76,18 @@ def extraer_datos(doc):
                 datos["direccion"] = cells[3]
 
             # CONTACTO + EMAIL
-            if "Contacto" in cells[0]:
+           if "Contacto" in cells[0]:
 
                 nombre = limpiar_nombre(cells[1])
-
+            
                 datos["nombre"] = nombre
                 datos["primer_nombre"] = nombre.split()[0].capitalize()
-
-                datos["correo"] = cells[3]
+            
+            # 🔥 BUSCAR EMAIL EN CUALQUIER CELDA
+            for c in cells:
+            
+                if "@" in c:
+                    datos["correo"] = c.strip()
 
             # CARGO + TELEFONO
             if "Cargo" in cells[0]:
