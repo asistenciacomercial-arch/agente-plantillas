@@ -213,27 +213,36 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
     # =========================
     if servicio == "vigilancia":
 
-        # ARMADA
-        if detalle == "armada":
+    # 🔥 DOS MODALIDADES
+    if detalle == "vigilancia_mixta":
 
-            if modalidad == "m":
-                return "plantillas/vigilancia_armada_m.docx"
+        return "plantillas/vigilancia_mixta.docx"
 
-            if modalidad == "f":
-                return "plantillas/vigilancia_armada_m_f.docx"
+    # =====================================
+    # ARMADA
+    # =====================================
+    if detalle == "armada":
 
-            return "plantillas/vigilancia_armada_e.docx"
+        if modalidad == "m":
+            return "plantillas/vigilancia_armada_m.docx"
 
-        # SIN ARMA
-        if detalle == "sin_arma":
+        if modalidad == "f":
+            return "plantillas/vigilancia_armada_m_f.docx"
 
-            if modalidad == "m":
-                return "plantillas/vigilancia_sin_arma_m.docx"
+        return "plantillas/vigilancia_armada_e.docx"
 
-            if modalidad == "f":
-                return "plantillas/vigilancia_sin_arma_f_m.docx"
+    # =====================================
+    # SIN ARMA
+    # =====================================
+    if detalle == "sin_arma":
 
-            return "plantillas/vigilancia_sin_arma_e_12h.docx"
+        if modalidad == "m":
+            return "plantillas/vigilancia_sin_arma_m.docx"
+
+        if modalidad == "f":
+            return "plantillas/vigilancia_sin_arma_f_m.docx"
+
+        return "plantillas/vigilancia_sin_arma_e_12h.docx"
 
     # =========================
     # ESCOLTA
@@ -274,7 +283,43 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
     # DEFAULT
     # =========================
     return "plantillas/vigilancia_sin_arma_m.docx"
+    
+def generar_titulos(servicio, detalle):
 
+    titulo_ref = ""
+    titulo_servicio = ""
+
+    # =====================================
+    # ESCOLTAS
+    # =====================================
+    if servicio == "escolta":
+
+        # 🔥 VARIAS MODALIDADES
+        if detalle == "mensual":
+
+            titulo_ref = (
+                "Propuesta Servicio de Escolta"
+            )
+
+            titulo_servicio = (
+                "SERVICIOS DE ESCOLTA "
+                "- DIFERENTES MODALIDADES"
+            )
+            
+    # =====================================
+    # VIGILANCIA
+    # =====================================
+    if detalle == "vigilancia_mixta":
+
+    titulo_ref = (
+        "Propuesta Servicio de Vigilancia Armada y sin Arma"
+    )
+
+    titulo_servicio = (
+        "SERVICIOS DE VIGILANCIA "
+        "- ARMADA Y SIN ARMA"
+    )
+    
 def detectar_detalle(doc):
 
     texto = ""
@@ -360,18 +405,34 @@ def detectar_detalle(doc):
     # VIGILANCIA
     # =====================================
 
-    if "armado" in texto or "armada" in texto:
-
+    tiene_armada = (
+        "armado" in texto
+        or "armada" in texto
+    )
+    
+    tiene_sin_arma = (
+        "sin arma" in texto
+        or "medio de comunicación" in texto
+    )
+    
+    # 🔥 DOS MODALIDADES
+    if tiene_armada and tiene_sin_arma:
+    
+        print("DETALLE: vigilancia_mixta")
+        return "vigilancia_mixta"
+    
+    # 🔥 SOLO ARMADA
+    if tiene_armada:
+    
         print("DETALLE: armada")
         return "armada"
-
-    if "sin arma" in texto or "medio de comunicación" in texto:
-
+    
+    # 🔥 SOLO SIN ARMA
+    if tiene_sin_arma:
+    
         print("DETALLE: sin_arma")
         return "sin_arma"
-
-    return "sin_arma"
-    
+        
 def detectar_modalidad(doc):
 
     texto = ""
@@ -489,12 +550,20 @@ async def procesar(
         )
 
         print("PLANTILLA:", plantilla)
-
+        titulo_ref, titulo_servicio = generar_titulos(
+            servicio,
+            detalle
+        )
+        
         # =========================
         # REEMPLAZOS
         # =========================
         reemplazos = {
+            
+            "titulo_ref": titulo_ref,
 
+            "titulo_servicio": titulo_servicio,
+            
             "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
 
             "fecha": fecha_es(),
@@ -544,7 +613,7 @@ async def procesar(
                 f"{obtener_tratamiento(datos.get('cargo', '')).lower()} "
                 f"{datos.get('primer_nombre', '')}"
             ),
-
+            
             # ALCANCE
             "alcance": datos.get(
                 "ciudad",
