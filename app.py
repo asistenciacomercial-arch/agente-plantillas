@@ -66,40 +66,72 @@ def extraer_datos(doc):
 
             cells = [c.text.strip() for c in row.cells]
 
-            texto_fila = " ".join(cells)
+            # recorrer por pares LABEL -> VALOR
+            for i, cell in enumerate(cells):
 
-            # COMPAÑIA
-            if "Compañía" in texto_fila:
+                texto = cell.lower()
 
-                datos["compania"] = cells[1].upper()
-                datos["direccion"] = cells[3]
+                # =====================
+                # COMPAÑIA
+                # =====================
+                if "compañía" in texto:
 
-            # CONTACTO
-            if "Contacto" in texto_fila:
+                    if i + 1 < len(cells):
+                        datos["compania"] = cells[i + 1].strip().upper()
 
-                nombre = limpiar_nombre(cells[1])
+                # =====================
+                # DIRECCION
+                # =====================
+                if "dirección" in texto:
 
-                datos["nombre"] = nombre
-                datos["primer_nombre"] = nombre.split()[0].capitalize()
+                    if i + 1 < len(cells):
+                        datos["direccion"] = cells[i + 1].strip()
 
-            # EMAIL
-            for c in cells:
+                # =====================
+                # CONTACTO
+                # =====================
+                if "contacto" in texto:
 
-                if "@" in c:
-                    datos["correo"] = c.strip()
+                    if i + 1 < len(cells):
 
-            # CARGO
-            if "Cargo" in texto_fila:
+                        nombre = limpiar_nombre(cells[i + 1])
 
-                datos["cargo"] = cells[1]
+                        datos["nombre"] = nombre.upper()
 
-            # TELEFONO
-            for c in cells:
+                        datos["primer_nombre"] = (
+                            nombre.split()[0].capitalize()
+                            if nombre else ""
+                        )
 
-                numeros = c.replace(" ", "")
+                # =====================
+                # EMAIL
+                # =====================
+                if "e-mail" in texto or "email" in texto:
 
-                if numeros.isdigit() and len(numeros) >= 7:
-                    datos["telefono"] = c.strip()
+                    if i + 1 < len(cells):
+                        datos["correo"] = cells[i + 1].strip()
+
+                # =====================
+                # CARGO
+                # =====================
+                if "cargo" in texto:
+
+                    if i + 1 < len(cells):
+                        datos["cargo"] = cells[i + 1].strip()
+
+                # =====================
+                # TELEFONO
+                # =====================
+                if "teléfono" in texto or "telefono" in texto:
+
+                    if i + 1 < len(cells):
+                        datos["telefono"] = cells[i + 1].strip()
+
+                # =====================
+                # CIUDAD
+                # =====================
+                if "bogotá" in cell.lower():
+                    datos["ciudad"] = "Bogotá"
 
     print("DATOS EXTRAIDOS:", datos)
 
