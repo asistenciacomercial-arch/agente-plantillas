@@ -71,14 +71,21 @@ def extraer_datos(doc):
     # =====================================
     for t in doc.tables:
 
-        texto_tabla = t.text.lower()
-
+        texto_tabla = ""
+    
+        for row in t.rows:
+            for cell in row.cells:
+                texto_tabla += cell.text.lower() + " "
+    
         if (
             "contacto" in texto_tabla
             and "cargo" in texto_tabla
-            and "compañía" in texto_tabla
+            and (
+                "compañía" in texto_tabla
+                or "compania" in texto_tabla
+            )
         ):
-
+    
             tabla = t
             break
 
