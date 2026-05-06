@@ -238,10 +238,17 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
     # =========================
     if servicio == "escolta":
 
+        if detalle == "mensual":
+            return "plantillas/escolta_mensual.docx"
+    
         if detalle == "motorizado":
             return "plantillas/escolta_motorizado.docx"
-
-        return "plantillas/escolta_a_pie.docx"
+    
+        if detalle == "conductor":
+            return "plantillas/escolta_conductor.docx"
+    
+        if detalle == "apie":
+            return "plantillas/escolta_apie.docx"
 
     # =========================
     # CONFIABILIDAD
@@ -270,39 +277,99 @@ def detectar_detalle(doc):
 
     texto = ""
 
+    # =========================
+    # LEER TODO EL TEXTO TABLAS
+    # =========================
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 texto += " " + cell.text.lower()
 
-    print("DETALLE:", texto)
+    print("TEXTO DETALLE:", texto)
+
+    # =====================================
+    # DETECTAR MODALIDADES ESCOLTA
+    # =====================================
+
+    tiene_motorizado = "motorizado" in texto
+
+    tiene_conductor = (
+        "conductor escolta" in texto
+        or "conductor" in texto
+    )
+
+    tiene_apie = (
+        "a pie" in texto
+        or "acompañante" in texto
+        or "acompanante" in texto
+    )
 
     # =========================
-    # ESCOLTA MOTORIZADO
+    # CONTAR MODALIDADES
     # =========================
-    if "motorizado" in texto:
+    total_modalidades = 0
+
+    if tiene_motorizado:
+        total_modalidades += 1
+
+    if tiene_conductor:
+        total_modalidades += 1
+
+    if tiene_apie:
+        total_modalidades += 1
+
+    # =====================================
+    # SI HAY DOS O MÁS → MENSUAL
+    # =====================================
+
+    if total_modalidades >= 2:
+
+        print("DETALLE: mensual")
+        return "mensual"
+
+    # =====================================
+    # SOLO MOTORIZADO
+    # =====================================
+
+    if tiene_motorizado:
+
+        print("DETALLE: motorizado")
         return "motorizado"
 
-    # =========================
-    # ESCOLTA A PIE
-    # =========================
-    if "escolta" in texto:
-        return "a_pie"
+    # =====================================
+    # SOLO CONDUCTOR
+    # =====================================
 
-    # =========================
-    # ARMADA
-    # =========================
+    if tiene_conductor:
+
+        print("DETALLE: conductor")
+        return "conductor"
+
+    # =====================================
+    # SOLO A PIE
+    # =====================================
+
+    if tiene_apie:
+
+        print("DETALLE: apie")
+        return "apie"
+
+    # =====================================
+    # VIGILANCIA
+    # =====================================
+
     if "armado" in texto or "armada" in texto:
+
+        print("DETALLE: armada")
         return "armada"
 
-    # =========================
-    # SIN ARMA
-    # =========================
     if "sin arma" in texto or "medio de comunicación" in texto:
+
+        print("DETALLE: sin_arma")
         return "sin_arma"
 
     return "sin_arma"
-
+    
 def detectar_modalidad(doc):
 
     texto = ""
