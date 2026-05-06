@@ -66,36 +66,42 @@ def extraer_datos(doc):
 
             cells = [c.text.strip() for c in row.cells]
 
-            if len(cells) < 4:
-                continue
+            texto_fila = " ".join(cells)
 
-            # COMPAÑIA + DIRECCION
-            if "Compañía" in cells[0]:
+            # COMPAÑIA
+            if "Compañía" in texto_fila:
 
                 datos["compania"] = cells[1].upper()
                 datos["direccion"] = cells[3]
 
-            # CONTACTO + EMAIL
-           if "Contacto" in cells[0]:
+            # CONTACTO
+            if "Contacto" in texto_fila:
 
                 nombre = limpiar_nombre(cells[1])
-            
+
                 datos["nombre"] = nombre
                 datos["primer_nombre"] = nombre.split()[0].capitalize()
-            
-            # 🔥 BUSCAR EMAIL EN CUALQUIER CELDA
+
+            # EMAIL
             for c in cells:
-            
+
                 if "@" in c:
                     datos["correo"] = c.strip()
 
-            # CARGO + TELEFONO
-            if "Cargo" in cells[0]:
+            # CARGO
+            if "Cargo" in texto_fila:
 
                 datos["cargo"] = cells[1]
-                datos["telefono"] = cells[3]
 
-    print(datos)
+            # TELEFONO
+            for c in cells:
+
+                numeros = c.replace(" ", "")
+
+                if numeros.isdigit() and len(numeros) >= 7:
+                    datos["telefono"] = c.strip()
+
+    print("DATOS EXTRAIDOS:", datos)
 
     return datos
     
