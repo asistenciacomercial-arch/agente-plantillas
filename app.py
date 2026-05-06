@@ -145,15 +145,39 @@ def extraer_datos(doc):
 # DETECCIÓN SERVICIO
 # =========================
 def detectar_servicio(doc):
+
+    texto_total = ""
+
+    # unir TODO el contenido
     for table in doc.tables:
         for row in table.rows:
-            textos = [c.text.strip().lower() for c in row.cells]
+            for cell in row.cells:
+                texto_total += " " + cell.text.lower()
 
-            if "vigilancia" in textos and "x" in textos:
-                return "vigilancia"
+    print("TEXTO SERVICIO:", texto_total)
+
+    # 🔥 ESCOLTA
+    if "escolta" in texto_total:
+        return "escolta"
+
+    # 🔥 CONFIABILIDAD
+    if "confiabilidad" in texto_total:
+        return "confiabilidad"
+
+    # 🔥 ELECTRONICA
+    if "electrónica" in texto_total or "electronica" in texto_total:
+        return "electronica"
+
+    # 🔥 MONITOREO
+    if "monitoreo" in texto_total:
+        return "monitoreo"
+
+    # 🔥 VIGILANCIA
+    if "vigilancia" in texto_total:
+        return "vigilancia"
 
     return "vigilancia"
-
+    
 def detectar_detalle(doc):
     texto = "\n".join([p.text.lower() for p in doc.paragraphs])
 
