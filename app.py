@@ -163,15 +163,13 @@ def extraer_datos(doc):
         # CIUDAD
         # =====================================
         try:
-        
+
             ciudad = tabla.rows[10].cells[1].text.strip()
-        
+
             datos["ciudad"] = ciudad
-        
+
         except:
             datos["ciudad"] = ""
-        
-                break
 
     except Exception as e:
 
