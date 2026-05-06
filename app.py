@@ -161,29 +161,15 @@ def extraer_datos(doc):
 
         # =====================================
         # CIUDAD
-        # fila TOTALIZACION
         # =====================================
-        for row in tabla.rows:
+        try:
         
-            fila_texto = " ".join(
-                cell.text.lower()
-                for cell in row.cells
-            )
+            ciudad = tabla.rows[10].cells[1].text.strip()
         
-            if "ciudad" in fila_texto:
+            datos["ciudad"] = ciudad
         
-                for cell in row.cells:
-        
-                    valor = cell.text.strip()
-        
-                    if (
-                        valor
-                        and "ciudad" not in valor.lower()
-                        and "lugar" not in valor.lower()
-                    ):
-        
-                        datos["ciudad"] = valor
-                        break
+        except:
+            datos["ciudad"] = ""
         
                 break
 
@@ -730,9 +716,8 @@ async def procesar(
                 ""
             ),
 
-            "ciudad": datos.get(
-                "ciudad",
-                "Bogotá"
+            "ciudad": datos["ciudad"],
+            "alcance": datos["ciudad"],
             ),
 
             # SALUDO
