@@ -309,16 +309,21 @@ def generar_titulos(servicio, detalle):
     # =====================================
     # VIGILANCIA
     # =====================================
-    if detalle == "vigilancia_mixta":
+    elif servicio == "vigilancia":
 
-    titulo_ref = (
-        "Propuesta Servicio de Vigilancia Armada y sin Arma"
-    )
+        # =====================================
+        # MIXTA
+        # =====================================
+        if detalle == "vigilancia_mixta":
 
-    titulo_servicio = (
-        "SERVICIOS DE VIGILANCIA "
-        "- ARMADA Y SIN ARMA"
-    )
+            titulo_ref = (
+                "Propuesta Servicio de Vigilancia Armada y sin Arma"
+            )
+        
+            titulo_servicio = (
+                "SERVICIOS DE VIGILANCIA "
+                "- ARMADA Y SIN ARMA"
+            )
     
 def detectar_detalle(doc):
 
