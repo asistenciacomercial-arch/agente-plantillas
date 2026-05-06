@@ -666,71 +666,55 @@ async def procesar(
             detalle
         )
         
-        # =========================
+        ## =========================
         # REEMPLAZOS
         # =========================
+        
+        titulo_ref, titulo_servicio = generar_titulos(
+            servicio,
+            detalle
+        )
+        
         reemplazos = {
-            
-            "titulo_ref": titulo_ref,
-
-            "titulo_servicio": titulo_servicio,
-            
+        
             "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
-
+        
             "fecha": fecha_es(),
-
-            # ENCABEZADO
+        
             "tratamiento": obtener_tratamiento(
-                datos.get("cargo", "")
+                datos["cargo"]
             ),
-
-            "nombre": datos.get("nombre", ""),
-
-            "primer_nombre": datos.get(
-                "primer_nombre",
-                ""
-            ),
-
-            "cargo": datos.get("cargo", ""),
-
-            "compañia": datos.get(
-                "compañia",
-                ""
-            ),
-
-            "correo": datos.get(
-                "correo",
-                ""
-            ),
-
-            "telefono": datos.get(
-                "telefono",
-                ""
-            ),
-
-            "direccion": datos.get(
-                "direccion",
-                ""
-            ),
-
+        
+            "nombre": datos["nombre"],
+        
+            "primer_nombre": datos["primer_nombre"],
+        
+            "cargo": datos["cargo"],
+        
+            "compañia": datos["compañia"],
+        
+            "correo": datos["correo"],
+        
+            "telefono": datos["telefono"],
+        
+            "direccion": datos["direccion"],
+        
             "ciudad": datos["ciudad"],
+        
             "alcance": datos["ciudad"],
-            ),
-
-            # SALUDO
+        
+            # saludo
             "saludo": (
                 f"Estimado "
-                f"{obtener_tratamiento(datos.get('cargo', '')).lower()} "
-                f"{datos.get('primer_nombre', '')}"
+                f"{obtener_tratamiento(datos['cargo']).lower()} "
+                f"{datos['primer_nombre']}"
             ),
-            
-            # ALCANCE
-            "alcance": datos.get(
-                "ciudad",
-                "Bogotá"
-            )
+        
+            # TITULOS DINAMICOS
+            "titulo_ref": titulo_ref,
+        
+            "titulo_servicio": titulo_servicio,
         }
-
         print("REEMPLAZOS:", reemplazos)
 
         # =========================
