@@ -294,7 +294,9 @@ def generar_titulos(servicio, detalle):
     # =====================================
     if servicio == "escolta":
 
-        # 🔥 VARIAS MODALIDADES
+        # =====================================
+        # VARIAS MODALIDADES
+        # =====================================
         if detalle == "mensual":
 
             titulo_ref = (
@@ -305,26 +307,56 @@ def generar_titulos(servicio, detalle):
                 "SERVICIOS DE ESCOLTA "
                 "- DIFERENTES MODALIDADES"
             )
-            
+
     # =====================================
     # VIGILANCIA
     # =====================================
-    if servicio == "vigilancia":
+    elif servicio == "vigilancia":
 
         # =====================================
         # MIXTA
         # =====================================
         if detalle == "vigilancia_mixta":
-    
+
             titulo_ref = (
-                "Propuesta servicios de vigilancia"
+                "Propuesta Servicios de Vigilancia"
             )
-    
+
             titulo_servicio = (
                 "SERVICIOS DE VIGILANCIA "
                 "- ARMADA Y SIN ARMA"
             )
-        
+
+        # =====================================
+        # ARMADA
+        # =====================================
+        elif detalle == "armada":
+
+            titulo_ref = (
+                "Propuesta Servicio de Vigilancia Armada"
+            )
+
+            titulo_servicio = (
+                "SERVICIO DE VIGILANCIA ARMADA"
+            )
+
+        # =====================================
+        # SIN ARMA
+        # =====================================
+        else:
+
+            titulo_ref = (
+                "Propuesta Servicio de Vigilancia "
+                "con Medio de Comunicación, Sin Arma"
+            )
+
+            titulo_servicio = (
+                "SERVICIO DE VIGILANCIA "
+                "CON MEDIO DE COMUNICACIÓN SIN ARMA"
+            )
+
+    return titulo_ref, titulo_servicio
+    
 def detectar_detalle(doc):
 
     texto = ""
