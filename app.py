@@ -204,6 +204,7 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
 # =========================
 # API
 # =========================
+
 from fastapi import Form
 
 @app.post("/procesar/")
@@ -211,35 +212,52 @@ async def procesar(
     file: UploadFile = File(...),
     servicio_manual: str = Form(None)
 ):
+
     try:
+
         temp = "entrada.docx"
 
-        # guardar archivo
+        # =========================
+        # GUARDAR ARCHIVO
+        # =========================
         with open(temp, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
         file.file.close()
 
-        # leer documento
+        # =========================
+        # LEER DOCUMENTO
+        # =========================
         doc = Document(temp)
 
+        # =========================
+        # EXTRAER DATOS
+        # =========================
         datos = extraer_datos(doc)
 
-        print("DATOS:", datos)
+        print("DATOS EXTRAIDOS:", datos)
 
-        # validar nombre
-        nombre = datos.get("nombre")
-        if not nombre:
-            nombre = "CLIENTE"
+        # =========================
+        # VALIDAR NOMBRE
+        # =========================
+        if not datos.get("nombre"):
+            datos["nombre"] = "CLIENTE"
 
-        tratamiento = obtener_tratamiento(datos.get("cargo", ""))
+        if not datos.get("primer_nombre"):
+            datos["primer_nombre"] = "Cliente"
 
+        # =========================
+        # DETECTAR SERVICIO
+        # =========================
         servicio = detectar_servicio(doc)
 
-        # 🔥 usar selección manual
+        # 🔥 SERVICIO MANUAL
         if servicio_manual:
             servicio = servicio_manual
-         if servicio is None:
+
+        # 🔥 SI NO DETECTA
+        if servicio is None:
+
             return {
                 "requiere_seleccion": True,
                 "mensaje": "No se pudo detectar el servicio",
@@ -250,58 +268,137 @@ async def procesar(
                     "electronica",
                     "monitoreo"
                 ]
-            }   
+            }
+
+        print("SERVICIO:", servicio)
+
+        # =========================
+        # DETECTAR DETALLE
+        # =========================
         detalle = detectar_detalle(doc)
+
+        print("DETALLE:", detalle)
+
+        # =========================
+        # DETECTAR MODALIDAD
+        # =========================
         modalidad = detectar_modalidad(doc)
 
-        plantilla = seleccionar_plantilla(servicio, detalle, modalidad)
+        print("MODALIDAD:", modalidad)
 
         # =========================
-        # REEMPLAZOS CORRECTOS
+        # SELECCIONAR PLANTILLA
+        # =========================
+        plantilla = seleccionar_plantilla(
+            servicio,
+            detalle,
+            modalidad
+        )
+
+        print("PLANTILLA:", plantilla)
+
+        # =========================
+        # REEMPLAZOS
         # =========================
         reemplazos = {
-        
+
             "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
-        
+
             "fecha": fecha_es(),
-        
-            "tratamiento": obtener_tratamiento(datos["cargo"]),
-        
-            "nombre": datos["nombre"],
-        
-            "primer_nombre": datos["primer_nombre"],
-        
-            "cargo": datos["cargo"],
-        
-            "compañia": datos["compañia"],
-        
-            "correo": datos["correo"],
-        
-            "telefono": datos["telefono"],
-        
-            "direccion": datos["direccion"],
-        
-            "ciudad": datos["ciudad"],
-        
-            # saludo abajo
-            "saludo": f"Estimado {obtener_tratamiento(datos['cargo']).lower()} {datos['primer_nombre']}"
+
+            # ENCABEZADO
+            "tratamiento": obtener_tratamiento(
+                datos.get("cargo", "")
+            ),
+
+            "nombre": datos.get("nombre", ""),
+
+            "primer_nombre": datos.get(
+                "primer_nombre",
+                ""
+            ),
+
+            "cargo": datos.get("cargo", ""),
+
+            "compania": datos.get(
+                "compania",
+                ""
+            ),
+
+            "correo": datos.get(
+                "correo",
+                ""
+            ),
+
+            "telefono": datos.get(
+                "telefono",
+                ""
+            ),
+
+            "direccion": datos.get(
+                "direccion",
+                ""
+            ),
+
+            "ciudad": datos.get(
+                "ciudad",
+                "Bogotá"
+            ),
+
+            # SALUDO
+            "saludo": (
+                f"Estimado "
+                f"{obtener_tratamiento(datos.get('cargo', '')).lower()} "
+                f"{datos.get('primer_nombre', '')}"
+            ),
+
+            # ALCANCE
+            "alcance": datos.get(
+                "ciudad",
+                "Bogotá"
+            )
         }
 
-        # generar documento
+        print("REEMPLAZOS:", reemplazos)
+
+        # =========================
+        # GENERAR DOCUMENTO
+        # =========================
         doc_tpl = DocxTemplate(plantilla)
+
         doc_tpl.render(reemplazos)
 
+        # =========================
+        # GUARDAR EN MEMORIA
+        # =========================
         buffer = BytesIO()
+
         doc_tpl.save(buffer)
+
         buffer.seek(0)
 
+        # =========================
+        # RESPUESTA
+        # =========================
         return StreamingResponse(
+
             buffer,
-            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+
+            media_type=(
+                "application/vnd.openxmlformats-officedocument."
+                "wordprocessingml.document"
+            ),
+
             headers={
-                "Content-Disposition": "attachment; filename=resultado.docx"
+                "Content-Disposition":
+                "attachment; filename=resultado.docx"
             }
         )
 
     except Exception as e:
-        return {"error": str(e)}
+
+        print("ERROR:", str(e))
+
+        return {
+            "error": str(e)
+        }
