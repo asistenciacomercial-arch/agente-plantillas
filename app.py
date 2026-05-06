@@ -176,7 +176,7 @@ def detectar_servicio(doc):
     if "vigilancia" in texto_total:
         return "vigilancia"
 
-    return "vigilancia"
+    return None
     
 def detectar_detalle(doc):
     texto = "\n".join([p.text.lower() for p in doc.paragraphs])
@@ -204,8 +204,13 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
 # =========================
 # API
 # =========================
+from fastapi import Form
+
 @app.post("/procesar/")
-async def procesar(file: UploadFile = File(...)):
+async def procesar(
+    file: UploadFile = File(...),
+    servicio_manual: str = Form(None)
+):
     try:
         temp = "entrada.docx"
 
@@ -230,6 +235,22 @@ async def procesar(file: UploadFile = File(...)):
         tratamiento = obtener_tratamiento(datos.get("cargo", ""))
 
         servicio = detectar_servicio(doc)
+
+        # 🔥 usar selección manual
+        if servicio_manual:
+            servicio = servicio_manual
+         if servicio is None:
+            return {
+                "requiere_seleccion": True,
+                "mensaje": "No se pudo detectar el servicio",
+                "opciones": [
+                    "vigilancia",
+                    "escolta",
+                    "confiabilidad",
+                    "electronica",
+                    "monitoreo"
+                ]
+            }   
         detalle = detectar_detalle(doc)
         modalidad = detectar_modalidad(doc)
 
