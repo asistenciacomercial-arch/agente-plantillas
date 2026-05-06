@@ -53,7 +53,7 @@ def extraer_datos(doc):
         "nombre": "",
         "primer_nombre": "",
         "cargo": "",
-        "compania": "",
+        "compañia": "",
         "correo": "",
         "telefono": "",
         "direccion": "",
@@ -77,7 +77,7 @@ def extraer_datos(doc):
                 if "compañía" in texto:
 
                     if i + 1 < len(cells):
-                        datos["compania"] = cells[i + 1].strip().upper()
+                        datos["compañia"] = cells[i + 1].strip().upper()
 
                 # =====================
                 # DIRECCION
