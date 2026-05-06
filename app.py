@@ -309,7 +309,7 @@ def generar_titulos(servicio, detalle):
     # =====================================
     # VIGILANCIA
     # =====================================
-    elif servicio == "vigilancia":
+    if servicio == "vigilancia":
 
         # =====================================
         # MIXTA
