@@ -146,55 +146,58 @@ def extraer_datos(doc):
 # =========================
 def detectar_servicio(doc):
 
-    texto_total = ""
+    texto = ""
 
-    # unir TODO el contenido
+    # 🔥 SOLO TABLAS
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
-                texto_total += " " + cell.text.lower()
+                texto += " " + cell.text.lower()
 
-    print("TEXTO SERVICIO:", texto_total)
+    print("TEXTO SERVICIO:", texto)
 
-    # 🔥 ESCOLTA
-    if "escolta" in texto_total:
+    # =========================
+    # ESCOLTA
+    # =========================
+    if "escolta" in texto:
+
+        print("SERVICIO DETECTADO: escolta")
         return "escolta"
 
-    # 🔥 CONFIABILIDAD
-    if "confiabilidad" in texto_total:
+    # =========================
+    # CONFIABILIDAD
+    # =========================
+    if "confiabilidad" in texto:
+
+        print("SERVICIO DETECTADO: confiabilidad")
         return "confiabilidad"
 
-    # 🔥 ELECTRONICA
-    if "electrónica" in texto_total or "electronica" in texto_total:
+    # =========================
+    # ELECTRONICA
+    # =========================
+    if "electrónica" in texto or "electronica" in texto:
+
+        print("SERVICIO DETECTADO: electronica")
         return "electronica"
 
-    # 🔥 MONITOREO
-    if "monitoreo" in texto_total:
+    # =========================
+    # MONITOREO
+    # =========================
+    if "monitoreo" in texto:
+
+        print("SERVICIO DETECTADO: monitoreo")
         return "monitoreo"
 
-    # 🔥 VIGILANCIA
-    if "vigilancia" in texto_total:
+    # =========================
+    # VIGILANCIA
+    # =========================
+    if "vigilancia" in texto:
+
+        print("SERVICIO DETECTADO: vigilancia")
         return "vigilancia"
 
+    print("NO SE DETECTÓ SERVICIO")
     return None
-    
-def detectar_detalle(doc):
-    texto = "\n".join([p.text.lower() for p in doc.paragraphs])
-
-    if "armada" in texto:
-        return "armada"
-    if "sin arma" in texto:
-        return "sin_arma"
-
-    return "sin_arma"
-
-def detectar_modalidad(doc):
-    texto = "\n".join([p.text.lower() for p in doc.paragraphs])
-
-    if "mensual" in texto:
-        return "m"
-    return "m"
-
 # =========================
 # PLANTILLA
 # =========================
