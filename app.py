@@ -42,12 +42,37 @@ def fecha_es():
 # EXTRAER DATOS (FORMATO REAL)
 # =========================
 def extraer_datos(doc):
-    datos = {}
+    datos = {
+        "nombre": "",
+        "cargo": "",
+        "compania": "",
+        "correo": "",
+        "telefono": "",
+        "ciudad": "",
+    }
+
+    tabla_objetivo = None
+
+    # 🔍 BUSCAR LA TABLA QUE CONTIENE "Compañía"
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                if "compañía" in cell.text.lower():
+                    tabla_objetivo = table
+                    break
+            if tabla_objetivo:
+                break
+        if tabla_objetivo:
+            break
+
+    if not tabla_objetivo:
+        print("❌ No se encontró la tabla correcta")
+        return datos
+
+    tabla = tabla_objetivo
 
     try:
-        # 🔥 CLAVE: usar la tabla correcta
-        tabla = doc.tables[1]
-
+        # 🔥 EXTRAER POR POSICIÓN RELATIVA (YA SEGURA)
         datos["compania"] = tabla.rows[2].cells[1].text.strip()
 
         datos["nombre"] = tabla.rows[3].cells[1].text.strip()
@@ -60,11 +85,15 @@ def extraer_datos(doc):
         datos["telefono"] = tabla.rows[4].cells[3].text.strip()
 
     except Exception as e:
-        print("ERROR TABLA:", e)
+        print("ERROR EXTRAYENDO:", e)
 
-    datos["ciudad"] = "Bogotá"
+    # ciudad
+    for p in doc.paragraphs:
+        if "bogotá" in p.text.lower():
+            datos["ciudad"] = "Bogotá"
+            break
 
-    print("DATOS REALES:", datos)
+    print("DATOS BIEN EXTRAIDOS:", datos)
 
     return datos
 # =========================
