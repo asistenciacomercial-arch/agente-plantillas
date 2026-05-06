@@ -213,10 +213,10 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
     # =========================
     if servicio == "vigilancia":
 
-    # 🔥 DOS MODALIDADES
-    if detalle == "vigilancia_mixta":
-
-        return "plantillas/vigilancia_mixta.docx"
+        # 🔥 DOS MODALIDADES
+        if detalle == "vigilancia_mixta":
+    
+            return "plantillas/vigilancia_mixta.docx"
 
     # =====================================
     # ARMADA
