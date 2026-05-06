@@ -12,15 +12,21 @@ app = FastAPI()
 # LIMPIEZA
 # =========================
 def limpiar_nombre(nombre):
-    return (
-        nombre.upper()
-        .replace("SR.", "")
-        .replace("SRA.", "")
-        .replace("DR.", "")
-        .replace("DRA.", "")
-        .strip()
-    )
 
+    eliminar = [
+        "SR.",
+        "SRA.",
+        "DR.",
+        "DRA."
+    ]
+
+    nombre = nombre.upper()
+
+    for e in eliminar:
+        nombre = nombre.replace(e, "")
+
+    return " ".join(nombre.split()).strip()
+    
 def obtener_tratamiento(cargo):
     cargo = (cargo or "").lower()
     if any(x in cargo for x in ["gerente", "director", "presidente"]):
@@ -45,6 +51,7 @@ def extraer_datos(doc):
 
     datos = {
         "nombre": "",
+        "primer_nombre": "",
         "cargo": "",
         "compania": "",
         "correo": "",
@@ -59,33 +66,35 @@ def extraer_datos(doc):
 
             cells = [c.text.strip() for c in row.cells]
 
-            # evitar filas vacías
             if len(cells) < 4:
                 continue
 
-            # 🔥 COMPAÑIA + DIRECCION
+            # COMPAÑIA + DIRECCION
             if "Compañía" in cells[0]:
 
-                datos["compania"] = cells[1]
+                datos["compania"] = cells[1].upper()
                 datos["direccion"] = cells[3]
 
-            # 🔥 CONTACTO + EMAIL
+            # CONTACTO + EMAIL
             if "Contacto" in cells[0]:
 
-                datos["nombre"] = cells[1]
-                datos["nombre_completo"] = cells[1].upper()
+                nombre = limpiar_nombre(cells[1])
+
+                datos["nombre"] = nombre
+                datos["primer_nombre"] = nombre.split()[0].capitalize()
 
                 datos["correo"] = cells[3]
 
-            # 🔥 CARGO + TELEFONO
+            # CARGO + TELEFONO
             if "Cargo" in cells[0]:
 
                 datos["cargo"] = cells[1]
                 datos["telefono"] = cells[3]
 
-    print("DATOS EXTRAIDOS:", datos)
+    print(datos)
 
     return datos
+    
 # =========================
 # DETECCIÓN SERVICIO
 # =========================
@@ -160,19 +169,31 @@ async def procesar(file: UploadFile = File(...)):
         # REEMPLAZOS CORRECTOS
         # =========================
         reemplazos = {
+        
             "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
+        
             "fecha": fecha_es(),
-
-            "tratamiento": tratamiento,
-            "nombre": nombre,
-
-            "cargo": datos.get("cargo", ""),
-            "compania": datos.get("compania", ""),
-            "correo": datos.get("correo", ""),
-            "telefono": datos.get("telefono", ""),
-            "ciudad": datos.get("ciudad", ""),
-
-            "saludo": f"Estimado {tratamiento} {nombre}",
+        
+            "tratamiento": obtener_tratamiento(datos["cargo"]),
+        
+            "nombre": datos["nombre"],
+        
+            "primer_nombre": datos["primer_nombre"],
+        
+            "cargo": datos["cargo"],
+        
+            "compania": datos["compania"],
+        
+            "correo": datos["correo"],
+        
+            "telefono": datos["telefono"],
+        
+            "direccion": datos["direccion"],
+        
+            "ciudad": datos["ciudad"],
+        
+            # saludo abajo
+            "saludo": f"Estimado {obtener_tratamiento(datos['cargo']).lower()} {datos['primer_nombre']}"
         }
 
         # generar documento
