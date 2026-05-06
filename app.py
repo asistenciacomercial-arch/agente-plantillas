@@ -376,7 +376,7 @@ async def procesar(
         servicio = detectar_servicio(doc)
 
         # 🔥 SERVICIO MANUAL
-        if servicio_manual:
+        if servicio_manual and servicio_manual != "string":
             servicio = servicio_manual
 
         # 🔥 SI NO DETECTA
