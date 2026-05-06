@@ -176,7 +176,6 @@ def extraer_datos(doc):
         print("ERROR EXTRACCION:", e)
 
     return datos
-    
 # =========================
 # DETECCIÓN SERVICIO
 # =========================
