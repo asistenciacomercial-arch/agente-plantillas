@@ -41,9 +41,13 @@ def fecha_es():
         "enero","febrero","marzo","abril","mayo","junio",
         "julio","agosto","septiembre","octubre","noviembre","diciembre"
     ]
-    hoy = datetime.now()
-    return f"{hoy.day} de {meses[hoy.month-1]} de {hoy.year}"
 
+    hoy = datetime.now()
+
+    dia = str(hoy.day).zfill(2)
+
+    return f"{dia} de {meses[hoy.month-1]} de {hoy.year}"
+    
 # =========================
 # EXTRAER DATOS (FORMATO REAL)
 # =========================
@@ -106,10 +110,10 @@ def extraer_datos(doc):
                 # =====================
                 # EMAIL
                 # =====================
-                if "e-mail" in texto or "email" in texto:
+                for c in cells:
 
-                    if i + 1 < len(cells):
-                        datos["correo"] = cells[i + 1].strip()
+                    if "@" in c:
+                        datos["correo"] = c.strip()
 
                 # =====================
                 # CARGO
