@@ -42,58 +42,48 @@ def fecha_es():
 # EXTRAER DATOS (FORMATO REAL)
 # =========================
 def extraer_datos(doc):
+
     datos = {
         "nombre": "",
         "cargo": "",
         "compania": "",
         "correo": "",
         "telefono": "",
-        "ciudad": "",
+        "direccion": "",
+        "ciudad": "Bogotá"
     }
 
-    tabla_objetivo = None
-
-    # 🔍 BUSCAR LA TABLA QUE CONTIENE "Compañía"
     for table in doc.tables:
+
         for row in table.rows:
-            for cell in row.cells:
-                if "compañía" in cell.text.lower():
-                    tabla_objetivo = table
-                    break
-            if tabla_objetivo:
-                break
-        if tabla_objetivo:
-            break
 
-    if not tabla_objetivo:
-        print("❌ No se encontró la tabla correcta")
-        return datos
+            cells = [c.text.strip() for c in row.cells]
 
-    tabla = tabla_objetivo
+            # evitar filas vacías
+            if len(cells) < 4:
+                continue
 
-    try:
-        # 🔥 EXTRAER POR POSICIÓN RELATIVA (YA SEGURA)
-        datos["compania"] = tabla.rows[2].cells[1].text.strip()
+            # 🔥 COMPAÑIA + DIRECCION
+            if "Compañía" in cells[0]:
 
-        datos["nombre"] = tabla.rows[3].cells[1].text.strip()
-        datos["nombre_completo"] = datos["nombre"].upper()
+                datos["compania"] = cells[1]
+                datos["direccion"] = cells[3]
 
-        datos["correo"] = tabla.rows[3].cells[3].text.strip()
+            # 🔥 CONTACTO + EMAIL
+            if "Contacto" in cells[0]:
 
-        datos["cargo"] = tabla.rows[4].cells[1].text.strip()
+                datos["nombre"] = cells[1]
+                datos["nombre_completo"] = cells[1].upper()
 
-        datos["telefono"] = tabla.rows[4].cells[3].text.strip()
+                datos["correo"] = cells[3]
 
-    except Exception as e:
-        print("ERROR EXTRAYENDO:", e)
+            # 🔥 CARGO + TELEFONO
+            if "Cargo" in cells[0]:
 
-    # ciudad
-    for p in doc.paragraphs:
-        if "bogotá" in p.text.lower():
-            datos["ciudad"] = "Bogotá"
-            break
+                datos["cargo"] = cells[1]
+                datos["telefono"] = cells[3]
 
-    print("DATOS BIEN EXTRAIDOS:", datos)
+    print("DATOS EXTRAIDOS:", datos)
 
     return datos
 # =========================
