@@ -146,57 +146,56 @@ def extraer_datos(doc):
 # =========================
 def detectar_servicio(doc):
 
-    texto = ""
-
-    # 🔥 SOLO TABLAS
     for table in doc.tables:
+
         for row in table.rows:
-            for cell in row.cells:
-                texto += " " + cell.text.lower()
 
-    print("TEXTO SERVICIO:", texto)
+            cells = [c.text.strip().lower() for c in row.cells]
 
-    # =========================
-    # ESCOLTA
-    # =========================
-    if "escolta" in texto:
+            print("FILA:", cells)
 
-        print("SERVICIO DETECTADO: escolta")
-        return "escolta"
+            for i, cell in enumerate(cells):
 
-    # =========================
-    # CONFIABILIDAD
-    # =========================
-    if "confiabilidad" in texto:
+                # 🔥 BUSCAR SOLO ESTA CELDA
+                if "tipo de servicio" in cell:
 
-        print("SERVICIO DETECTADO: confiabilidad")
-        return "confiabilidad"
+                    # tomar celda derecha
+                    if i + 1 < len(cells):
 
-    # =========================
-    # ELECTRONICA
-    # =========================
-    if "electrónica" in texto or "electronica" in texto:
+                        valor = cells[i + 1].strip().lower()
 
-        print("SERVICIO DETECTADO: electronica")
-        return "electronica"
+                        print("TIPO SERVICIO:", valor)
 
-    # =========================
-    # MONITOREO
-    # =========================
-    if "monitoreo" in texto:
+                        # =========================
+                        # ESCOLTA
+                        # =========================
+                        if "escolta" in valor:
+                            return "escolta"
 
-        print("SERVICIO DETECTADO: monitoreo")
-        return "monitoreo"
+                        # =========================
+                        # VIGILANCIA
+                        # =========================
+                        if "vigilancia" in valor:
+                            return "vigilancia"
 
-    # =========================
-    # VIGILANCIA
-    # =========================
-    if "vigilancia" in texto:
+                        # =========================
+                        # ELECTRONICA
+                        # =========================
+                        if "electr" in valor:
+                            return "electronica"
 
-        print("SERVICIO DETECTADO: vigilancia")
-        return "vigilancia"
+                        # =========================
+                        # CONFIABILIDAD
+                        # =========================
+                        if "confiabilidad" in valor:
+                            return "confiabilidad"
 
-    print("NO SE DETECTÓ SERVICIO")
+                        # =========================
+                        # MONITOREO
+                        # =========================
+                        if "monitoreo" in valor:
+                            return "monitoreo"
+
     return None
 # =========================
 # PLANTILLA
