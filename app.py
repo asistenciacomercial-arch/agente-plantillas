@@ -199,8 +199,70 @@ def detectar_modalidad(doc):
 # PLANTILLA
 # =========================
 def seleccionar_plantilla(servicio, detalle, modalidad):
-    return "plantillas/vigilancia_sin_arma_m.docx"
 
+    print("SERVICIO:", servicio)
+    print("DETALLE:", detalle)
+    print("MODALIDAD:", modalidad)
+
+    # =========================
+    # VIGILANCIA
+    # =========================
+    if servicio == "vigilancia":
+
+        # ARMADA
+        if detalle == "armada":
+
+            if modalidad == "m":
+                return "plantillas/vigilancia_armada_m.docx"
+
+            if modalidad == "f":
+                return "plantillas/vigilancia_armada_m_f.docx"
+
+            return "plantillas/vigilancia_armada_e.docx"
+
+        # SIN ARMA
+        if detalle == "sin_arma":
+
+            if modalidad == "m":
+                return "plantillas/vigilancia_sin_arma_m.docx"
+
+            if modalidad == "f":
+                return "plantillas/vigilancia_sin_arma_f_m.docx"
+
+            return "plantillas/vigilancia_sin_arma_e_12h.docx"
+
+    # =========================
+    # ESCOLTA
+    # =========================
+    if servicio == "escolta":
+
+        if detalle == "motorizado":
+            return "plantillas/escolta_motorizado.docx"
+
+        return "plantillas/escolta_a_pie.docx"
+
+    # =========================
+    # CONFIABILIDAD
+    # =========================
+    if servicio == "confiabilidad":
+        return "plantillas/confiabilidad.docx"
+
+    # =========================
+    # ELECTRONICA
+    # =========================
+    if servicio == "electronica":
+        return "plantillas/seguridad_electronica.docx"
+
+    # =========================
+    # MONITOREO
+    # =========================
+    if servicio == "monitoreo":
+        return "plantillas/monitoreo.docx"
+
+    # =========================
+    # DEFAULT
+    # =========================
+    return "plantillas/vigilancia_sin_arma_m.docx"
 # =========================
 # API
 # =========================
@@ -320,8 +382,8 @@ async def procesar(
 
             "cargo": datos.get("cargo", ""),
 
-            "compania": datos.get(
-                "compania",
+            "compañia": datos.get(
+                "compañia",
                 ""
             ),
 
