@@ -488,6 +488,8 @@ async def procesar(
         # =========================
         # GENERAR DOCUMENTO
         # =========================
+        print("PLANTILLA FINAL:", plantilla)
+        
         doc_tpl = DocxTemplate(plantilla)
 
         doc_tpl.render(reemplazos)
