@@ -266,6 +266,66 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
     # DEFAULT
     # =========================
     return "plantillas/vigilancia_sin_arma_m.docx"
+
+def detectar_detalle(doc):
+
+    texto = ""
+
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                texto += " " + cell.text.lower()
+
+    print("DETALLE:", texto)
+
+    # =========================
+    # ESCOLTA MOTORIZADO
+    # =========================
+    if "motorizado" in texto:
+        return "motorizado"
+
+    # =========================
+    # ESCOLTA A PIE
+    # =========================
+    if "escolta" in texto:
+        return "a_pie"
+
+    # =========================
+    # ARMADA
+    # =========================
+    if "armado" in texto or "armada" in texto:
+        return "armada"
+
+    # =========================
+    # SIN ARMA
+    # =========================
+    if "sin arma" in texto or "medio de comunicación" in texto:
+        return "sin_arma"
+
+    return "sin_arma"
+
+def detectar_modalidad(doc):
+
+    texto = ""
+
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                texto += " " + cell.text.lower()
+
+    print("MODALIDAD:", texto)
+
+    if "mensual" in texto:
+        return "m"
+
+    if "fortalecimiento" in texto:
+        return "f"
+
+    if "evento" in texto:
+        return "e"
+
+    return "m"
+
 # =========================
 # API
 # =========================
