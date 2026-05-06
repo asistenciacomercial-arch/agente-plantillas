@@ -96,16 +96,18 @@ def extraer_datos(doc):
 
         # =====================================
         # COMPAÑIA
+        # fila 4
         # =====================================
         datos["compañia"] = (
-            tabla.rows[2].cells[1].text.strip().upper()
+            tabla.rows[3].cells[1].text.strip().upper()
         )
-
+        
         # =====================================
         # NOMBRE
+        # fila 5
         # =====================================
-        nombre = tabla.rows[3].cells[1].text.strip()
-
+        nombre = tabla.rows[4].cells[1].text.strip()
+        
         nombre = (
             nombre.upper()
             .replace("SR.", "")
@@ -114,58 +116,75 @@ def extraer_datos(doc):
             .replace("DRA.", "")
             .strip()
         )
-
+        
         datos["nombre"] = nombre
-
+        
         if nombre:
             datos["primer_nombre"] = (
                 nombre.split()[0].title()
             )
-
+        
         # =====================================
         # CORREO
+        # fila 5 col 3
         # =====================================
-        correo = tabla.rows[3].cells[3].text.strip()
-
+        correo = tabla.rows[4].cells[3].text.strip()
+        
         if "@" in correo:
             datos["correo"] = correo
-
+        
         # =====================================
         # CARGO
+        # fila 6
         # =====================================
         datos["cargo"] = (
-            tabla.rows[4].cells[1].text.strip()
+            tabla.rows[5].cells[1].text.strip()
         )
-
+        
         # =====================================
         # TELEFONO
+        # fila 6 col 3
         # =====================================
         telefono = (
-            tabla.rows[4].cells[3].text.strip()
+            tabla.rows[5].cells[3].text.strip()
         )
-
+        
         datos["telefono"] = telefono
-
+        
         # =====================================
         # DIRECCION
+        # fila 4 col 3
         # =====================================
         datos["direccion"] = (
-            tabla.rows[2].cells[3].text.strip()
+            tabla.rows[3].cells[3].text.strip()
         )
 
         # =====================================
         # CIUDAD
+        # fila TOTALIZACION
         # =====================================
         for row in tabla.rows:
-
-            titulo = row.cells[0].text.lower()
-
-            if "ciudad" in titulo:
-
-                datos["ciudad"] = (
-                    row.cells[1].text.strip()
-                )
-
+        
+            fila_texto = " ".join(
+                cell.text.lower()
+                for cell in row.cells
+            )
+        
+            if "ciudad" in fila_texto:
+        
+                for cell in row.cells:
+        
+                    valor = cell.text.strip()
+        
+                    if (
+                        valor
+                        and "ciudad" not in valor.lower()
+                        and "lugar" not in valor.lower()
+                    ):
+        
+                        datos["ciudad"] = valor
+                        break
+        
                 break
 
     except Exception as e:
