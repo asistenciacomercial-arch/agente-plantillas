@@ -134,8 +134,10 @@ def extraer_datos(doc):
                 # =====================
                 # CIUDAD
                 # =====================
-                if "bogotá" in cell.lower():
-                    datos["ciudad"] = "Bogotá"
+                if "ciudad - lugar" in texto:
+
+                    if i + 1 < len(cells):
+                        datos["ciudad"] = cells[i + 1].strip()
 
     print("DATOS EXTRAIDOS:", datos)
 
