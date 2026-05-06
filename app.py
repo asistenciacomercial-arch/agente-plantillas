@@ -64,13 +64,31 @@ def extraer_datos(doc):
         "ciudad": "",
     }
 
-    tabla = doc.tables[1]
+    tabla = None
+
+    # =====================================
+    # BUSCAR TABLA DEL LEVANTAMIENTO
+    # =====================================
+    for t in doc.tables:
+
+        texto_tabla = t.text.lower()
+
+        if (
+            "contacto" in texto_tabla
+            and "cargo" in texto_tabla
+            and "compañía" in texto_tabla
+        ):
+
+            tabla = t
+            break
+
+    if tabla is None:
+        return datos
 
     try:
 
         # =====================================
         # COMPAÑIA
-        # fila 3 col 1
         # =====================================
         datos["compañia"] = (
             tabla.rows[2].cells[1].text.strip().upper()
@@ -78,7 +96,6 @@ def extraer_datos(doc):
 
         # =====================================
         # NOMBRE
-        # fila 4 col 1
         # =====================================
         nombre = tabla.rows[3].cells[1].text.strip()
 
@@ -94,11 +111,12 @@ def extraer_datos(doc):
         datos["nombre"] = nombre
 
         if nombre:
-            datos["primer_nombre"] = nombre.split()[0].title()
+            datos["primer_nombre"] = (
+                nombre.split()[0].title()
+            )
 
         # =====================================
         # CORREO
-        # fila 4 col 3
         # =====================================
         correo = tabla.rows[3].cells[3].text.strip()
 
@@ -107,7 +125,6 @@ def extraer_datos(doc):
 
         # =====================================
         # CARGO
-        # fila 5 col 1
         # =====================================
         datos["cargo"] = (
             tabla.rows[4].cells[1].text.strip()
@@ -115,19 +132,15 @@ def extraer_datos(doc):
 
         # =====================================
         # TELEFONO
-        # fila 5 col 3
         # =====================================
         telefono = (
             tabla.rows[4].cells[3].text.strip()
         )
 
-        if telefono.replace(" ", "").replace("-", "").isdigit():
-
-            datos["telefono"] = telefono
+        datos["telefono"] = telefono
 
         # =====================================
         # DIRECCION
-        # fila 3 col 3
         # =====================================
         datos["direccion"] = (
             tabla.rows[2].cells[3].text.strip()
@@ -135,13 +148,12 @@ def extraer_datos(doc):
 
         # =====================================
         # CIUDAD
-        # fila ciudad/lugar
         # =====================================
         for row in tabla.rows:
 
-            texto = row.cells[0].text.lower()
+            titulo = row.cells[0].text.lower()
 
-            if "ciudad" in texto:
+            if "ciudad" in titulo:
 
                 datos["ciudad"] = (
                     row.cells[1].text.strip()
