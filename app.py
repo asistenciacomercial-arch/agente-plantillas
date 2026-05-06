@@ -162,15 +162,24 @@ def extraer_datos(doc):
         # =====================================
         # CIUDAD
         # =====================================
-        try:
-
-            ciudad = tabla.rows[10].cells[1].text.strip()
-
-            datos["ciudad"] = ciudad
-
-        except:
-            datos["ciudad"] = ""
-
+        for t in doc.tables:
+        
+            for row in t.rows:
+        
+                try:
+        
+                    titulo = row.cells[0].text.lower()
+        
+                    if "ciudad - lugar" in titulo:
+        
+                        datos["ciudad"] = (
+                            row.cells[1].text.strip()
+                        )
+        
+                        break
+        
+                except:
+                    pass
     except Exception as e:
 
         print("ERROR EXTRACCION:", e)
