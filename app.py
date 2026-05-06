@@ -61,85 +61,97 @@ def extraer_datos(doc):
         "correo": "",
         "telefono": "",
         "direccion": "",
-        "ciudad": "Bogotá"
+        "ciudad": "",
     }
 
-    for table in doc.tables:
+    tabla = doc.tables[1]
 
-        for row in table.rows:
+    try:
 
-            cells = [c.text.strip() for c in row.cells]
+        # =====================================
+        # COMPAÑIA
+        # fila 3 col 1
+        # =====================================
+        datos["compañia"] = (
+            tabla.rows[2].cells[1].text.strip().upper()
+        )
 
-            # recorrer por pares LABEL -> VALOR
-            for i, cell in enumerate(cells):
+        # =====================================
+        # NOMBRE
+        # fila 4 col 1
+        # =====================================
+        nombre = tabla.rows[3].cells[1].text.strip()
 
-                texto = cell.lower()
+        nombre = (
+            nombre.upper()
+            .replace("SR.", "")
+            .replace("SRA.", "")
+            .replace("DR.", "")
+            .replace("DRA.", "")
+            .strip()
+        )
 
-                # =====================
-                # COMPAÑIA
-                # =====================
-                if "compañía" in texto:
+        datos["nombre"] = nombre
 
-                    if i + 1 < len(cells):
-                        datos["compañia"] = cells[i + 1].strip().upper()
+        if nombre:
+            datos["primer_nombre"] = nombre.split()[0].title()
 
-                # =====================
-                # DIRECCION
-                # =====================
-                if "dirección" in texto:
+        # =====================================
+        # CORREO
+        # fila 4 col 3
+        # =====================================
+        correo = tabla.rows[3].cells[3].text.strip()
 
-                    if i + 1 < len(cells):
-                        datos["direccion"] = cells[i + 1].strip()
+        if "@" in correo:
+            datos["correo"] = correo
 
-                # =====================
-                # CONTACTO
-                # =====================
-                if "contacto" in texto:
+        # =====================================
+        # CARGO
+        # fila 5 col 1
+        # =====================================
+        datos["cargo"] = (
+            tabla.rows[4].cells[1].text.strip()
+        )
 
-                    if i + 1 < len(cells):
+        # =====================================
+        # TELEFONO
+        # fila 5 col 3
+        # =====================================
+        telefono = (
+            tabla.rows[4].cells[3].text.strip()
+        )
 
-                        nombre = limpiar_nombre(cells[i + 1])
+        if telefono.replace(" ", "").replace("-", "").isdigit():
 
-                        datos["nombre"] = nombre.upper()
+            datos["telefono"] = telefono
 
-                        datos["primer_nombre"] = (
-                            nombre.split()[0].capitalize()
-                            if nombre else ""
-                        )
+        # =====================================
+        # DIRECCION
+        # fila 3 col 3
+        # =====================================
+        datos["direccion"] = (
+            tabla.rows[2].cells[3].text.strip()
+        )
 
-                # =====================
-                # EMAIL
-                # =====================
-                for c in cells:
+        # =====================================
+        # CIUDAD
+        # fila ciudad/lugar
+        # =====================================
+        for row in tabla.rows:
 
-                    if "@" in c:
-                        datos["correo"] = c.strip()
+            texto = row.cells[0].text.lower()
 
-                # =====================
-                # CARGO
-                # =====================
-                if "cargo" in texto:
+            if "ciudad" in texto:
 
-                    if i + 1 < len(cells):
-                        datos["cargo"] = cells[i + 1].strip()
+                datos["ciudad"] = (
+                    row.cells[1].text.strip()
+                )
 
-                # =====================
-                # TELEFONO
-                # =====================
-                if "teléfono" in texto or "telefono" in texto:
+                break
 
-                    if i + 1 < len(cells):
-                        datos["telefono"] = cells[i + 1].strip()
+    except Exception as e:
 
-                # =====================
-                # CIUDAD
-                # =====================
-                if "ciudad - lugar" in texto:
-
-                    if i + 1 < len(cells):
-                        datos["ciudad"] = cells[i + 1].strip()
-
-    print("DATOS EXTRAIDOS:", datos)
+        print("ERROR EXTRACCION:", e)
 
     return datos
     
