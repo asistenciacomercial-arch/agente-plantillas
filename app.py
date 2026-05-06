@@ -224,7 +224,7 @@ async def procesar(file: UploadFile = File(...)):
         
             "cargo": datos["cargo"],
         
-            "compania": datos["compania"],
+            "compañia": datos["compañia"],
         
             "correo": datos["correo"],
         
