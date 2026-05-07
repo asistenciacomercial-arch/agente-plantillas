@@ -767,11 +767,37 @@ async def procesar(
         ## =========================
         # REEMPLAZOS
         # =========================
-        
         titulo_ref, titulo_servicio = generar_titulos(
             servicio,
             detalle
         )
+        
+        # =========================
+        # GENERO Y SALUDO
+        # =========================
+        
+        tratamiento = obtener_tratamiento(
+            datos["nombre"],
+            datos["cargo"]
+        )
+        
+        primer_nombre = obtener_primer_nombre_real(
+            datos["nombre"]
+        )
+        
+        genero = detectar_genero(
+            datos["nombre"]
+        )
+        
+        saludo_base = "Estimado"
+        
+        if genero == "f":
+            saludo_base = "Estimada"
+        
+        # =========================
+        # REEMPLAZOS
+        # =========================
+
         
         reemplazos = {
 
