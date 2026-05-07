@@ -774,37 +774,16 @@ async def procesar(
         )
         
         reemplazos = {
-        
+
             "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
         
             "fecha": fecha_es(),
         
-            # =========================
-            # GENERO Y SALUDO
-            # =========================
-            
-            tratamiento = obtener_tratamiento(
-                datos["nombre"],
-                datos["cargo"]
-            )
-            
-            primer_nombre = obtener_primer_nombre_real(
-                datos["nombre"]
-            )
-            
-            genero = detectar_genero(
-                datos["nombre"]
-            )
-            
-            saludo_base = "Estimado"
-            
-            if genero == "f":
-                saludo_base = "Estimada"
-                        ),
+            "tratamiento": tratamiento,
         
             "nombre": datos["nombre"],
         
-            "primer_nombre": datos["primer_nombre"],
+            "primer_nombre": primer_nombre,
         
             "cargo": datos["cargo"],
         
@@ -820,20 +799,19 @@ async def procesar(
         
             "alcance": datos["ciudad"],
         
-            # saludo
+            # SALUDO
             "saludo": (
-                f"Estimado "
-                f"{obtener_tratamiento(datos['cargo']).lower()} "
-                f"{datos['primer_nombre']}"
+                f"{saludo_base} "
+                f"{tratamiento.lower()} "
+                f"{primer_nombre}"
             ),
         
-            # TITULOS DINAMICOS
+            # TITULOS
             "titulo_ref": titulo_ref,
         
-            "titulo_servicio": titulo_servicio,
+            "titulo_servicio": titulo_servicio
+        
         }
-        print("REEMPLAZOS:", reemplazos)
-
         # =========================
         # GENERAR DOCUMENTO
         # =========================
