@@ -186,78 +186,52 @@ def extraer_datos(doc):
 
     return datos
 # =========================
-# DETECCIÓN SERVICIO
-# =========================
-# =========================
-# DETECTAR SERVICIO
+# DETECTAR SERVICIO DESDE TABLA X
 # =========================
 def detectar_servicio(doc):
 
-    texto = ""
-
-    # leer tablas
     for table in doc.tables:
+
         for row in table.rows:
-            for cell in row.cells:
-                texto += " " + cell.text.lower()
 
-    # leer párrafos
-    for p in doc.paragraphs:
-        texto += " " + p.text.lower()
+            celdas = [c.text.strip().lower() for c in row.cells]
 
-    print("TEXTO SERVICIO:", texto)
+            fila = " | ".join(celdas)
 
-    # =====================================
-    # ESCOLTAS
-    # =====================================
-    if any(x in texto for x in [
-        "escolta",
-        "motorizado",
-        "acompañante",
-        "conductor"
-    ]):
-        return "escolta"
+            print("FILA:", fila)
 
-    # =====================================
-    # VIGILANCIA
-    # =====================================
-    if any(x in texto for x in [
-        "vigilancia",
-        "sin arma",
-        "armada",
-        "medio de comunicación"
-    ]):
-        return "vigilancia"
+            # =====================================
+            # VIGILANCIA
+            # =====================================
+            if "vigilancia" in fila and "x" in fila:
+                return "vigilancia"
 
-    # =====================================
-    # CONFIABILIDAD
-    # =====================================
-    if any(x in texto for x in [
-        "confiabilidad",
-        "poligraf",
-        "visita domiciliaria",
-        "antecedentes",
-        "estudio de seguridad",
-        "validación"
-    ]):
-        return "confiabilidad"
+            # =====================================
+            # ESCOLTA
+            # =====================================
+            if "escolta" in fila and "x" in fila:
+                return "escolta"
 
-    # =====================================
-    # ELECTRONICA
-    # =====================================
-    if any(x in texto for x in [
-        "cctv",
-        "alarmas",
-        "seguridad electronica",
-        "electrónica"
-    ]):
-        return "electronica"
+            # =====================================
+            # CONFIABILIDAD
+            # =====================================
+            if "confiabilidad" in fila and "x" in fila:
+                return "confiabilidad"
 
-    # =====================================
-    # MONITOREO
-    # =====================================
-    if "monitoreo" in texto:
-        return "monitoreo"
+            # =====================================
+            # ELECTRONICA
+            # =====================================
+            if (
+                "seguridad electronica" in fila
+                or "electrónica" in fila
+            ) and "x" in fila:
+                return "electronica"
+
+            # =====================================
+            # MONITOREO
+            # =====================================
+            if "monitoreo" in fila and "x" in fila:
+                return "monitoreo"
 
     return None
 # =========================
