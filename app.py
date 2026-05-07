@@ -188,57 +188,76 @@ def extraer_datos(doc):
 # =========================
 # DETECCIÓN SERVICIO
 # =========================
+# =========================
+# DETECTAR SERVICIO
+# =========================
 def detectar_servicio(doc):
 
+    texto = ""
+
+    # leer tablas
     for table in doc.tables:
-
         for row in table.rows:
+            for cell in row.cells:
+                texto += " " + cell.text.lower()
 
-            cells = [c.text.strip().lower() for c in row.cells]
+    # leer párrafos
+    for p in doc.paragraphs:
+        texto += " " + p.text.lower()
 
-            print("FILA:", cells)
+    print("TEXTO SERVICIO:", texto)
 
-            for i, cell in enumerate(cells):
+    # =====================================
+    # ESCOLTAS
+    # =====================================
+    if any(x in texto for x in [
+        "escolta",
+        "motorizado",
+        "acompañante",
+        "conductor"
+    ]):
+        return "escolta"
 
-                # 🔥 BUSCAR SOLO ESTA CELDA
-                if "tipo de servicio" in cell:
+    # =====================================
+    # VIGILANCIA
+    # =====================================
+    if any(x in texto for x in [
+        "vigilancia",
+        "sin arma",
+        "armada",
+        "medio de comunicación"
+    ]):
+        return "vigilancia"
 
-                    # tomar celda derecha
-                    if i + 1 < len(cells):
+    # =====================================
+    # CONFIABILIDAD
+    # =====================================
+    if any(x in texto for x in [
+        "confiabilidad",
+        "poligraf",
+        "visita domiciliaria",
+        "antecedentes",
+        "estudio de seguridad",
+        "validación"
+    ]):
+        return "confiabilidad"
 
-                        valor = cells[i + 1].strip().lower()
+    # =====================================
+    # ELECTRONICA
+    # =====================================
+    if any(x in texto for x in [
+        "cctv",
+        "alarmas",
+        "seguridad electronica",
+        "electrónica"
+    ]):
+        return "electronica"
 
-                        print("TIPO SERVICIO:", valor)
-
-                        # =========================
-                        # ESCOLTA
-                        # =========================
-                        if "escolta" in valor:
-                            return "escolta"
-
-                        # =========================
-                        # VIGILANCIA
-                        # =========================
-                        if "vigilancia" in valor:
-                            return "vigilancia"
-
-                        # =========================
-                        # ELECTRONICA
-                        # =========================
-                        if "electr" in valor:
-                            return "electronica"
-
-                        # =========================
-                        # CONFIABILIDAD
-                        # =========================
-                        if "confiabilidad" in valor:
-                            return "confiabilidad"
-
-                        # =========================
-                        # MONITOREO
-                        # =========================
-                        if "monitoreo" in valor:
-                            return "monitoreo"
+    # =====================================
+    # MONITOREO
+    # =====================================
+    if "monitoreo" in texto:
+        return "monitoreo"
 
     return None
 # =========================
