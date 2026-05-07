@@ -275,7 +275,7 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
 
         # mezcla armada + sin arma
         if detalle == "vigilancia_mixta":
-            return "plantillas/vigilancia_mixta.docx"
+            return "plantillas/vigilancia_m.docx"
 
         # armada
         elif detalle == "armada":
