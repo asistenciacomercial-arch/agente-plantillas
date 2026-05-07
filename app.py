@@ -32,7 +32,103 @@ def obtener_tratamiento(cargo):
     if any(x in cargo for x in ["gerente", "director", "presidente"]):
         return "Doctor"
     return "Señor"
+# =====================================
+# DETECTAR GENERO
+# =====================================
+def detectar_genero(nombre):
 
+    nombre = nombre.lower()
+
+    femeninos = [
+        "maria","ana","laura","paula","andrea","carolina",
+        "diana","luisa","patricia","camila","valentina",
+        "anverly","solange","nancy","lina","adriana",
+        "monica","claudia","johana","tatiana","veronica",
+        "dayana","yohana","juliana","angela","sandra"
+    ]
+
+    masculinos = [
+        "juan","carlos","manuel","ivan","andres","luis",
+        "felipe","daniel","miguel","jose","eduardo",
+        "sebastian","david","alejandro","ricardo",
+        "hector","oscar","diego","jorge","kevin"
+    ]
+
+    palabras = nombre.split()
+
+    for p in palabras:
+
+        pl = p.lower().strip()
+
+        if pl in femeninos:
+            return "f"
+
+        if pl in masculinos:
+            return "m"
+
+    return "m"
+
+
+# =====================================
+# PRIMER NOMBRE REAL
+# =====================================
+def obtener_primer_nombre_real(nombre):
+
+    femeninos = [
+        "maria","ana","laura","paula","andrea","carolina",
+        "diana","luisa","patricia","camila","valentina",
+        "anverly","solange","nancy","lina","adriana"
+    ]
+
+    masculinos = [
+        "juan","carlos","manuel","ivan","andres","luis",
+        "felipe","daniel","miguel","jose","eduardo"
+    ]
+
+    palabras = nombre.split()
+
+    for p in palabras:
+
+        pl = p.lower().strip()
+
+        if pl in femeninos or pl in masculinos:
+            return p.capitalize()
+
+    return palabras[0].capitalize()
+
+
+# =====================================
+# TRATAMIENTO
+# =====================================
+def obtener_tratamiento(nombre, cargo):
+
+    genero = detectar_genero(nombre)
+
+    cargo = cargo.lower()
+
+    es_directivo = any(x in cargo for x in [
+        "director",
+        "directora",
+        "gerente",
+        "presidente",
+        "presidenta",
+        "coordinador",
+        "coordinadora",
+        "jefe",
+        "jefa"
+    ])
+
+    if es_directivo:
+
+        if genero == "f":
+            return "Doctora"
+
+        return "Doctor"
+
+    if genero == "f":
+        return "Señora"
+
+    return "Señor"
 # =========================
 # FECHA
 # =========================
@@ -683,9 +779,28 @@ async def procesar(
         
             "fecha": fecha_es(),
         
-            "tratamiento": obtener_tratamiento(
+            # =========================
+            # GENERO Y SALUDO
+            # =========================
+            
+            tratamiento = obtener_tratamiento(
+                datos["nombre"],
                 datos["cargo"]
-            ),
+            )
+            
+            primer_nombre = obtener_primer_nombre_real(
+                datos["nombre"]
+            )
+            
+            genero = detectar_genero(
+                datos["nombre"]
+            )
+            
+            saludo_base = "Estimado"
+            
+            if genero == "f":
+                saludo_base = "Estimada"
+                        ),
         
             "nombre": datos["nombre"],
         
