@@ -1,3 +1,23 @@
+import unicodedata
+
+def normalizar(txt):
+
+    if not txt:
+        return ""
+
+    txt = txt.lower()
+
+    txt = unicodedata.normalize(
+        'NFKD',
+        txt
+    ).encode(
+        'ascii',
+        'ignore'
+    ).decode('utf-8')
+
+    txt = " ".join(txt.split())
+
+    return txt
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import StreamingResponse
 from docx import Document
@@ -202,19 +222,20 @@ def extraer_datos(doc):
         # NOMBRE
         # fila 5
         # =====================================
-        nombre = tabla.rows[4].cells[1].text.strip()
-        
-        nombre = (
-            nombre.upper()
-            .replace("SR.", "")
-            .replace("SRA.", "")
-            .replace("DR.", "")
-            .replace("DRA.", "")
-            .strip()
-        )
-        
-        datos["nombre"] = nombre
-        
+        if len(tabla.rows) > 4:
+            nombre = tabla.rows[4].cells[1].text.strip()
+            
+            nombre = (
+                nombre.upper()
+                .replace("SR.", "")
+                .replace("SRA.", "")
+                .replace("DR.", "")
+                .replace("DRA.", "")
+                .strip()
+            )
+            
+            datos["nombre"] = nombre
+            
         if nombre:
             datos["primer_nombre"] = (
                 nombre.split()[0].title()
@@ -292,7 +313,9 @@ def detectar_servicio(doc):
 
             celdas = [c.text.strip().lower() for c in row.cells]
 
-            fila = " | ".join(celdas)
+            fila = normalizar(
+                " | ".join(celdas)
+            )
 
             print("FILA:", fila)
 
@@ -539,7 +562,7 @@ def detectar_detalle(doc):
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
-                texto += " " + cell.text.lower()
+                texto += " " + normalizar(cell.text)
 
     print("TEXTO DETALLE:", texto)
 
