@@ -591,30 +591,28 @@ def generar_titulos(servicio, detalle):
     
 def detectar_detalle(doc):
 
-    texto = ""
-
-    # =========================
-    # LEER TODO EL TEXTO TABLAS
-    # =========================
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                texto += " " + normalizar(cell.text)
+    texto = obtener_texto_completo(doc)
 
     print("TEXTO DETALLE:", texto)
-    print("MOTORIZADO:", tiene_motorizado)
-    print("CONDUCTOR:", tiene_conductor)
-    print("A PIE:", tiene_apie)
+
     # =====================================
-    # DETECTAR MODALIDADES ESCOLTA
+    # VARIABLES
     # =====================================
 
-    tiene_motorizado = "motorizado" in texto
+    tiene_motorizado = any(
+
+        palabra in texto
+
+        for palabra in [
+            "motorizado",
+            "moto"
+        ]
+    )
 
     tiene_conductor = any(
 
         palabra in texto
-    
+
         for palabra in [
             "conductor escolta",
             "conductor",
@@ -623,99 +621,68 @@ def detectar_detalle(doc):
         ]
     )
 
-    tiene_apie = (
-        "a pie" in texto
-        or "acompañante" in texto
-        or "acompanante" in texto
+    tiene_apie = any(
+
+        palabra in texto
+
+        for palabra in [
+            "a pie",
+            "acompañante",
+            "acompanante"
+        ]
     )
 
-    # =========================
-    # CONTAR MODALIDADES
-    # =========================
-    total_modalidades = 0
-
-    if tiene_motorizado:
-        total_modalidades += 1
-
-    if tiene_conductor:
-        total_modalidades += 1
-
-    if tiene_apie:
-        total_modalidades += 1
-
-    # =====================================
-    # SI HAY DOS O MÁS → MENSUAL
-    # =====================================
+    print("MOTORIZADO:", tiene_motorizado)
+    print("CONDUCTOR:", tiene_conductor)
+    print("A PIE:", tiene_apie)
 
     modalidades_detectadas = []
 
+    # =====================================
+    # MODALIDADES
+    # =====================================
+
     if tiene_motorizado:
         modalidades_detectadas.append("motorizado")
-    
+
     if tiene_conductor:
         modalidades_detectadas.append("conductor")
-    
+
     if tiene_apie:
         modalidades_detectadas.append("a_pie")
-    
+
     # =====================================
-    # DOS O MÁS MODALIDADES REALES
+    # MULTIPLE
     # =====================================
+
     if len(modalidades_detectadas) >= 2:
-    
-        print("DETALLE: general")
+
+        print("DETALLE: multiple")
+
         return "multiple"
-    
-    # =====================================
-    # SOLO MOTORIZADO
-    # =====================================
-    if "motorizado" in modalidades_detectadas:
-    
-        print("DETALLE: motorizado")
-        return "motorizado"
-    
-    # =====================================
-    # SOLO CONDUCTOR
-    # =====================================
-    if "conductor" in modalidades_detectadas:
-    
-        print("DETALLE: conductor")
-        return "conductor"
 
     # =====================================
-    # SOLO A PIE
-    # =====================================
-    if "a_pie" in modalidades_detectadas:
-    
-        print("DETALLE: a_pie")
-        return "a_pie"
-
-    # =====================================
-    # SOLO MOTORIZADO
+    # SOLO UNA
     # =====================================
 
-    if tiene_motorizado:
+    if len(modalidades_detectadas) == 1:
 
-        print("DETALLE: motorizado")
-        return "motorizado"
+        print(
+            "DETALLE:",
+            modalidades_detectadas[0]
+        )
 
-    # =====================================
-    # SOLO CONDUCTOR
-    # =====================================
-
-    if tiene_conductor:
-
-        print("DETALLE: conductor")
-        return "conductor"
+        return modalidades_detectadas[0]
 
     # =====================================
-    # SOLO A PIE
+    # ESCOLTA GENERAL
     # =====================================
 
-    if tiene_apie:
+    if "escolta" in texto:
 
-        print("DETALLE: apie")
-        return "apie"
+        print("DETALLE: general")
+
+        return "general"
 
     # =====================================
     # VIGILANCIA
@@ -725,30 +692,25 @@ def detectar_detalle(doc):
         "armado" in texto
         or "armada" in texto
     )
-    
+
     tiene_sin_arma = (
         "sin arma" in texto
-        or "medio de comunicación" in texto
+        or "medio de comunicacion" in texto
     )
-    
-    # 🔥 DOS MODALIDADES
+
     if tiene_armada and tiene_sin_arma:
-    
-        print("DETALLE: vigilancia_mixta")
+
         return "vigilancia_mixta"
-    
-    # 🔥 SOLO ARMADA
+
     if tiene_armada:
-    
-        print("DETALLE: armada")
+
         return "armada"
-    
-    # 🔥 SOLO SIN ARMA
+
     if tiene_sin_arma:
-    
-        print("DETALLE: sin_arma")
+
         return "sin_arma"
-        
+
+    return None
 def detectar_modalidad(doc):
 
     texto = ""
