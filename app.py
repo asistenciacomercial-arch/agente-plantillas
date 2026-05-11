@@ -588,6 +588,32 @@ def generar_titulos(servicio, detalle):
             )
 
     return titulo_ref, titulo_servicio
+# =========================
+# OBTENER TEXTO COMPLETO
+# =========================
+def obtener_texto_completo(doc):
+
+    texto = ""
+
+    # =========================
+    # PÁRRAFOS
+    # =========================
+    for p in doc.paragraphs:
+
+        texto += " " + normalizar(p.text)
+
+    # =========================
+    # TABLAS
+    # =========================
+    for table in doc.tables:
+
+        for row in table.rows:
+
+            for cell in row.cells:
+
+                texto += " " + normalizar(cell.text)
+
+    return texto
     
 def detectar_detalle(doc):
 
