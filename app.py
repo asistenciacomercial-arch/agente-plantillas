@@ -619,43 +619,32 @@ def detectar_detalle(doc):
 
     texto = obtener_texto_completo(doc)
 
-    print("TEXTO DETALLE:", texto)
+    print(texto)
 
     # =====================================
     # VARIABLES
     # =====================================
 
-    tiene_motorizado = any(
+    tiene_motorizado = (
 
-        palabra in texto
-
-        for palabra in [
-            "motorizado",
-            "moto"
-        ]
+        "motorizado" in texto
+        or "moto" in texto
     )
 
-    tiene_conductor = any(
+    tiene_conductor = (
 
-        palabra in texto
-
-        for palabra in [
-            "conductor escolta",
-            "conductor",
-            "chofer",
-            "driver"
-        ]
+        "conductor" in texto
+        or "chofer" in texto
+        or "driver" in texto
+        or "vehiculo" in texto
+        or "vehículo" in texto
     )
 
-    tiene_apie = any(
+    tiene_apie = (
 
-        palabra in texto
-
-        for palabra in [
-            "a pie",
-            "acompañante",
-            "acompanante"
-        ]
+        "a pie" in texto
+        or "acompanante" in texto
+        or "acompañante" in texto
     )
 
     print("MOTORIZADO:", tiene_motorizado)
