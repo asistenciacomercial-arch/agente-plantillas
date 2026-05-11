@@ -602,16 +602,25 @@ def detectar_detalle(doc):
                 texto += " " + normalizar(cell.text)
 
     print("TEXTO DETALLE:", texto)
-
+    print("MOTORIZADO:", tiene_motorizado)
+    print("CONDUCTOR:", tiene_conductor)
+    print("A PIE:", tiene_apie)
     # =====================================
     # DETECTAR MODALIDADES ESCOLTA
     # =====================================
 
     tiene_motorizado = "motorizado" in texto
 
-    tiene_conductor = (
-        "conductor escolta" in texto
-        or "conductor" in texto
+    tiene_conductor = any(
+
+        palabra in texto
+    
+        for palabra in [
+            "conductor escolta",
+            "conductor",
+            "chofer",
+            "driver"
+        ]
     )
 
     tiene_apie = (
