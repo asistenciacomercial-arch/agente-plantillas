@@ -823,7 +823,9 @@ async def procesar(
         # DETECTAR DETALLE
         # =========================
         detalle = detectar_detalle(doc)
-
+        
+        modalidad = detectar_modalidad(doc)
+        
         print("SERVICIO FINAL:", servicio)
         print("DETALLE FINAL:", detalle)
         print("MODALIDAD FINAL:", modalidad)
