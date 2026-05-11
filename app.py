@@ -636,13 +636,13 @@ def detectar_detalle(doc):
         print("DETALLE: conductor")
         return "conductor"
 
-# =====================================
-# SOLO A PIE
-# =====================================
-if "a_pie" in modalidades_detectadas:
-
-    print("DETALLE: a_pie")
-    return "a_pie"
+    # =====================================
+    # SOLO A PIE
+    # =====================================
+    if "a_pie" in modalidades_detectadas:
+    
+        print("DETALLE: a_pie")
+        return "a_pie"
 
     # =====================================
     # SOLO MOTORIZADO
