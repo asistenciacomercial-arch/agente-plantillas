@@ -351,7 +351,44 @@ def detectar_servicio(doc):
             # =====================================
             if "monitoreo" in fila and "x" in fila:
                 return "monitoreo"
-
+            # =====================================
+            # FALLBACK POR TEXTO LIBRE
+            # =====================================
+        
+            texto_total = ""
+        
+            for table in doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        texto_total += " " + normalizar(cell.text)
+        
+            # ESCOLTA
+            if (
+                "escolta" in texto_total
+                or "acompanamiento" in texto_total
+                or "acompañamiento" in texto_total
+            ):
+                return "escolta"
+        
+            # VIGILANCIA
+            if "vigilancia" in texto_total:
+                return "vigilancia"
+        
+            # CONFIABILIDAD
+            if "confiabilidad" in texto_total:
+                return "confiabilidad"
+        
+            # ELECTRONICA
+            if (
+                "seguridad electronica" in texto_total
+                or "seguridad electrónica" in texto_total
+            ):
+                return "electronica"
+        
+            # MONITOREO
+            if "monitoreo" in texto_total:
+                return "monitoreo"
+        
     return None
 # =========================
 # PLANTILLA
