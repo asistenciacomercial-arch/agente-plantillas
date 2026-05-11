@@ -824,7 +824,9 @@ async def procesar(
         # =========================
         detalle = detectar_detalle(doc)
 
-        print("DETALLE:", detalle)
+        print("SERVICIO FINAL:", servicio)
+        print("DETALLE FINAL:", detalle)
+        print("MODALIDAD FINAL:", modalidad)
 
         # =========================
         # DETECTAR MODALIDAD
@@ -847,7 +849,7 @@ async def procesar(
             servicio,
             detalle
         )
-        
+        print("PLANTILLA FINAL:", plantilla)
         ## =========================
         # REEMPLAZOS
         # =========================
