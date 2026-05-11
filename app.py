@@ -393,129 +393,128 @@ def detectar_servicio(doc):
 # =========================
 # PLANTILLA
 # =========================
-def seleccionar_plantilla(servicio, detalle, modalidad):
+def seleccionar_plantilla(
+    servicio,
+    detalle,
+    modalidad
+):
+
+    print("==== SELECCIONAR PLANTILLA ====")
+    print("SERVICIO:", servicio)
+    print("DETALLE:", detalle)
+    print("MODALIDAD:", modalidad)
 
     # =====================================
     # ESCOLTAS
     # =====================================
     if servicio == "escolta":
 
-        # múltiples modalidades
-        if detalle == "dos":
-            return "plantillas/escolta_mensual.docx"
+        # MULTIPLE
+        if detalle == "multiple":
 
-        # individuales
-        elif modalidad == "motorizado":
-            return "plantillas/escolta_motorizado.docx"
+            return (
+                "plantillas/"
+                "escolta_multiple.docx"
+            )
 
-        elif modalidad == "conductor":
-            return "plantillas/escolta_conductor.docx"
+        # CONDUCTOR
+        if detalle == "conductor":
 
-        elif modalidad == "a_pie":
-            return "plantillas/escolta_apie.docx"
+            return (
+                "plantillas/"
+                "escolta_conductor.docx"
+            )
 
-        else:
-            return "plantillas/escolta_mensual.docx"
+        # MOTORIZADO
+        if detalle == "motorizado":
+
+            return (
+                "plantillas/"
+                "escolta_motorizado.docx"
+            )
+
+        # A PIE
+        if detalle == "a_pie":
+
+            return (
+                "plantillas/"
+                "escolta_apie.docx"
+            )
+
+        # GENERAL
+        return (
+            "plantillas/"
+            "escolta_general.docx"
+        )
 
     # =====================================
     # VIGILANCIA
     # =====================================
-    elif servicio == "vigilancia":
+    if servicio == "vigilancia":
 
-        # mezcla armada + sin arma
         if detalle == "vigilancia_mixta":
-            return "plantillas/vigilancia_m.docx"
 
-        # armada
-        elif detalle == "armada":
+            return (
+                "plantillas/"
+                "vigilancia_mixta.docx"
+            )
 
-            if modalidad == "mensual":
-                return "plantillas/vigilancia_armada_m.docx"
+        if detalle == "armada":
 
-            elif modalidad == "evento":
-                return "plantillas/vigilancia_armada_e.docx"
+            return (
+                "plantillas/"
+                "vigilancia_armada.docx"
+            )
 
-            else:
-                return "plantillas/vigilancia_armada_m.docx"
+        if detalle == "sin_arma":
 
-        # sin arma
-        elif detalle == "sin_arma":
+            return (
+                "plantillas/"
+                "vigilancia_sin_arma.docx"
+            )
 
-            if modalidad == "mensual":
-                return "plantillas/vigilancia_sin_arma_m.docx"
-
-            elif modalidad == "evento":
-                return "plantillas/vigilancia_sin_arma_e.docx"
-
-            else:
-                return "plantillas/vigilancia_sin_arma_m.docx"
-
-        else:
-            return "plantillas/vigilancia_sin_arma_m.docx"
+        return (
+            "plantillas/"
+            "vigilancia_general.docx"
+        )
 
     # =====================================
     # CONFIABILIDAD
     # =====================================
-    elif servicio == "confiabilidad":
+    if servicio == "confiabilidad":
 
-        return "plantillas/confiabilidad.docx"
+        return (
+            "plantillas/"
+            "confiabilidad.docx"
+        )
 
     # =====================================
-    # SEGURIDAD ELECTRONICA
+    # ELECTRONICA
     # =====================================
-    elif servicio == "electronica":
+    if servicio == "electronica":
 
-        return "plantillas/seguridad_electronica.docx"
+        return (
+            "plantillas/"
+            "electronica.docx"
+        )
 
     # =====================================
     # MONITOREO
     # =====================================
-    elif servicio == "monitoreo":
+    if servicio == "monitoreo":
 
-        return "plantillas/monitoreo.docx"
-
-    # =====================================
-    # CONSULTORIA
-    # =====================================
-    elif servicio == "consultoria":
-
-        return "plantillas/consultoria.docx"
-
-    # =====================================
-    # ESTUDIOS DE SEGURIDAD
-    # =====================================
-    elif servicio == "estudio_seguridad":
-
-        return "plantillas/estudio_seguridad.docx"
-
-    # =====================================
-    # CAPACITACIONES
-    # =====================================
-    elif servicio == "capacitacion":
-
-        return "plantillas/capacitacion.docx"
-
-    # =====================================
-    # POLIGRAFIA
-    # =====================================
-    elif servicio == "poligrafia":
-
-        return "plantillas/poligrafia.docx"
-
-    # =====================================
-    # VISITAS DOMICILIARIAS
-    # =====================================
-    elif servicio == "visita_domiciliaria":
-
-        return "plantillas/visita_domiciliaria.docx"
+        return (
+            "plantillas/"
+            "monitoreo.docx"
+        )
 
     # =====================================
     # DEFAULT
     # =====================================
-    else:
-
-        return "plantillas/default.docx"
-    
+    return (
+        "plantillas/"
+        "default.docx"
+    )
 def generar_titulos(servicio, detalle):
 
     titulo_ref = ""
