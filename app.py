@@ -364,7 +364,7 @@ def seleccionar_plantilla(servicio, detalle, modalidad):
     if servicio == "escolta":
 
         # múltiples modalidades
-        if detalle == "mensual":
+        if detalle == "dos":
             return "plantillas/escolta_mensual.docx"
 
         # individuales
@@ -492,7 +492,7 @@ def generar_titulos(servicio, detalle):
         # =====================================
         # VARIAS MODALIDADES
         # =====================================
-        if detalle == "mensual":
+        if detalle == "multiple":
 
             titulo_ref = (
                 "Propuesta Servicio de Escolta"
@@ -601,10 +601,48 @@ def detectar_detalle(doc):
     # SI HAY DOS O MÁS → MENSUAL
     # =====================================
 
-    if total_modalidades >= 2:
+    modalidades_detectadas = []
 
-        print("DETALLE: mensual")
-        return "mensual"
+    if tiene_motorizado:
+        modalidades_detectadas.append("motorizado")
+    
+    if tiene_conductor:
+        modalidades_detectadas.append("conductor")
+    
+    if tiene_apie:
+        modalidades_detectadas.append("a_pie")
+    
+    # =====================================
+    # DOS O MÁS MODALIDADES REALES
+    # =====================================
+    if len(modalidades_detectadas) >= 2:
+    
+        print("DETALLE: general")
+        return "multiple"
+    
+    # =====================================
+    # SOLO MOTORIZADO
+    # =====================================
+    if "motorizado" in modalidades_detectadas:
+    
+        print("DETALLE: motorizado")
+        return "motorizado"
+    
+    # =====================================
+    # SOLO CONDUCTOR
+    # =====================================
+    if "conductor" in modalidades_detectadas:
+    
+        print("DETALLE: conductor")
+        return "conductor"
+
+# =====================================
+# SOLO A PIE
+# =====================================
+if "a_pie" in modalidades_detectadas:
+
+    print("DETALLE: a_pie")
+    return "a_pie"
 
     # =====================================
     # SOLO MOTORIZADO
