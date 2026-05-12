@@ -86,7 +86,7 @@ def detectar_genero(nombre):
         if pl in masculinos:
             return "m"
 
-    return "m"
+    return "f or m"
 
 
 # =====================================
@@ -452,7 +452,7 @@ def seleccionar_plantilla(
     # =====================================
     if servicio == "vigilancia":
 
-        if detalle == "vigilancia_mixta":
+        if detalle == "vigilancia":
 
             return (
                 "plantillas/"
