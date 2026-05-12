@@ -628,6 +628,7 @@ def detectar_detalle(doc):
 
         "motorizado" in texto
         or "moto" in texto
+        or "rodamiento" in texto
     )
 
     tiene_conductor = (
