@@ -747,7 +747,43 @@ def detectar_modalidad(doc):
         return "e"
 
     return "m"
+import re
 
+# =========================
+# EXTRAER CONSECUTIVO
+# =========================
+def extraer_consecutivo(doc):
+
+    texto = obtener_texto_completo(doc)
+
+    # =====================================
+    # BUSCAR CONSECUTIVOS
+    # =====================================
+
+    patrones = [
+
+        r"\b\d{10,14}\b",   # 202605111329
+
+        r"consecutivo[:\s]*([A-Z0-9\-]+)"
+    ]
+
+    for patron in patrones:
+
+        resultado = re.search(
+            patron,
+            texto,
+            re.IGNORECASE
+        )
+
+        if resultado:
+
+            if resultado.groups():
+                return resultado.group(1)
+
+            return resultado.group(0)
+
+    return None
+    
 # =========================
 # API
 # =========================
