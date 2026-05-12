@@ -777,15 +777,22 @@ def extraer_consecutivo(doc):
 
     texto = obtener_texto_completo(doc)
 
-    # =====================================
-    # BUSCAR CONSECUTIVOS
-    # =====================================
+    print("BUSCANDO CONSECUTIVO EN:")
+    print(texto)
 
     patrones = [
 
-        r"\b\d{10,14}\b",   # 202605111329
+        # 202405111230
+        r"\b\d{10,14}\b",
 
-        r"consecutivo[:\s]*([A-Z0-9\-]+)"
+        # FR-GCO-001
+        r"\b[A-Z]{2,10}-[A-Z]{2,10}-\d{1,5}\b",
+
+        # consecutivo: XXX
+        r"consecutivo[:\s]*([A-Z0-9\-]+)",
+
+        # No. XXX
+        r"no\.\s*([A-Z0-9\-]+)"
     ]
 
     for patron in patrones:
@@ -797,6 +804,11 @@ def extraer_consecutivo(doc):
         )
 
         if resultado:
+
+            print(
+                "CONSECUTIVO ENCONTRADO:",
+                resultado.group(0)
+            )
 
             if resultado.groups():
                 return resultado.group(1)
@@ -938,7 +950,20 @@ async def procesar(
         
         if genero == "f":
             saludo_base = "Estimada"
+        # =========================
+        # CONSECUTIVO
+        # =========================
         
+        consecutivo = extraer_consecutivo(doc)
+        
+        if not consecutivo:
+        
+            consecutivo = datetime.now().strftime(
+                "%Y%m%d%H%M"
+            )
+        
+        print("CONSECUTIVO:", consecutivo)
+
         # =========================
         # REEMPLAZOS
         # =========================
@@ -946,7 +971,7 @@ async def procesar(
         
         reemplazos = {
 
-            "consecutivo": datetime.now().strftime("%Y%m%d%H%M"),
+           "consecutivo": consecutivo,
         
             "fecha": fecha_es(),
         
