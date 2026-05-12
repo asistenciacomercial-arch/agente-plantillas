@@ -414,7 +414,7 @@ def seleccionar_plantilla(
 
             return (
                 "plantillas/"
-                "escolta_multiple.docx"
+                "escolta_mensual.docx"
             )
 
         # CONDUCTOR
@@ -444,7 +444,7 @@ def seleccionar_plantilla(
         # GENERAL
         return (
             "plantillas/"
-            "escolta_general.docx"
+            "escolta_mensual.docx"
         )
 
     # =====================================
@@ -456,7 +456,7 @@ def seleccionar_plantilla(
 
             return (
                 "plantillas/"
-                "vigilancia_mixta.docx"
+                "vigilancia_m.docx"
             )
 
         if detalle == "armada":
@@ -475,7 +475,7 @@ def seleccionar_plantilla(
 
         return (
             "plantillas/"
-            "vigilancia_general.docx"
+            "vigilancia_m.docx"
         )
 
     # =====================================
