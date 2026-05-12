@@ -362,30 +362,51 @@ def detectar_servicio(doc):
                     for cell in row.cells:
                         texto_total += " " + normalizar(cell.text)
         
+            # =====================================
+            # PRIORIDAD: VIGILANCIA
+            # =====================================
+            
+            if (
+                "vigilancia" in texto_total
+                or "guardas de seguridad" in texto_total
+                or "medio de comunicacion" in texto_total
+                or "sin arma" in texto_total
+                or "armada" in texto_total
+            ):
+                return "vigilancia"
+            
+            # =====================================
             # ESCOLTA
+            # =====================================
+            
             if (
                 "escolta" in texto_total
-                or "acompanamiento" in texto_total
-                or "acompañamiento" in texto_total
+                or "conductor escolta" in texto_total
+                or "motorizado" in texto_total
             ):
                 return "escolta"
-        
-            # VIGILANCIA
-            if "vigilancia" in texto_total:
-                return "vigilancia"
-        
+            
+            # =====================================
             # CONFIABILIDAD
+            # =====================================
+            
             if "confiabilidad" in texto_total:
                 return "confiabilidad"
-        
+            
+            # =====================================
             # ELECTRONICA
+            # =====================================
+            
             if (
                 "seguridad electronica" in texto_total
                 or "seguridad electrónica" in texto_total
             ):
                 return "electronica"
-        
+            
+            # =====================================
             # MONITOREO
+            # =====================================
+            
             if "monitoreo" in texto_total:
                 return "monitoreo"
         
