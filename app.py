@@ -312,109 +312,85 @@ def extraer_datos(doc):
 # =========================
 def detectar_servicio(doc):
 
-    for table in doc.tables:
+    texto = obtener_texto_completo(doc)
 
-        for row in table.rows:
+    print("=== TEXTO SERVICIO ===")
+    print(texto)
 
-            celdas = [c.text.strip().lower() for c in row.cells]
+    # =====================================
+    # CONFIABILIDAD
+    # =====================================
+    if (
 
-            fila = normalizar(
-                " | ".join(celdas)
-            )
+        "confiabilidad" in texto
+        or "estudio de seguridad" in texto
+        or "visita domiciliaria" in texto
+        or "poligrafo" in texto
+        or "polígrafo" in texto
+    ):
 
-            print("FILA:", fila)
+        print("SERVICIO: confiabilidad")
 
-            # =====================================
-            # VIGILANCIA
-            # =====================================
-            if "vigilancia" in fila and "x" in fila:
-                return "vigilancia"
+        return "confiabilidad"
 
-            # =====================================
-            # ESCOLTA
-            # =====================================
-            if "escolta" in fila and "x" in fila:
-                return "escolta"
+    # =====================================
+    # ESCOLTAS
+    # =====================================
+    if (
 
-            # =====================================
-            # CONFIABILIDAD
-            # =====================================
-            if "confiabilidad" in fila and "x" in fila:
-                return "confiabilidad"
+        "escolta" in texto
+        or "conductor escolta" in texto
+        or "escolta motorizado" in texto
+        or "acompañante" in texto
+        or "acompanante" in texto
+    ):
 
-            # =====================================
-            # ELECTRONICA
-            # =====================================
-            if (
-                "seguridad electronica" in fila
-                or "electrónica" in fila
-            ) and "x" in fila:
-                return "electronica"
+        print("SERVICIO: escolta")
 
-            # =====================================
-            # MONITOREO
-            # =====================================
-            if "monitoreo" in fila and "x" in fila:
-                return "monitoreo"
-            # =====================================
-            # FALLBACK POR TEXTO LIBRE
-            # =====================================
-        
-            texto_total = ""
-        
-            for table in doc.tables:
-                for row in table.rows:
-                    for cell in row.cells:
-                        texto_total += " " + normalizar(cell.text)
-        
-            # =====================================
-            # PRIORIDAD: VIGILANCIA
-            # =====================================
-            
-            if (
-                "vigilancia" in texto_total
-                or "guardas de seguridad" in texto_total
-                or "medio de comunicacion" in texto_total
-                or "sin arma" in texto_total
-                or "armada" in texto_total
-            ):
-                return "vigilancia"
-            
-            # =====================================
-            # ESCOLTA
-            # =====================================
-            
-            if (
-                "escolta" in texto_total
-                or "conductor escolta" in texto_total
-                or "motorizado" in texto_total
-            ):
-                return "escolta"
-            
-            # =====================================
-            # CONFIABILIDAD
-            # =====================================
-            
-            if "confiabilidad" in texto_total:
-                return "confiabilidad"
-            
-            # =====================================
-            # ELECTRONICA
-            # =====================================
-            
-            if (
-                "seguridad electronica" in texto_total
-                or "seguridad electrónica" in texto_total
-            ):
-                return "electronica"
-            
-            # =====================================
-            # MONITOREO
-            # =====================================
-            
-            if "monitoreo" in texto_total:
-                return "monitoreo"
-        
+        return "escolta"
+
+    # =====================================
+    # VIGILANCIA
+    # =====================================
+    if (
+
+        "servicio de vigilancia" in texto
+        or "guarda de seguridad" in texto
+        or "guardas de seguridad" in texto
+        or "sin arma" in texto
+        or "servicio armado" in texto
+    ):
+
+        print("SERVICIO: vigilancia")
+
+        return "vigilancia"
+
+    # =====================================
+    # ELECTRONICA
+    # =====================================
+    if (
+
+        "seguridad electronica" in texto
+        or "seguridad electrónica" in texto
+        or "cctv" in texto
+        or "alarmas" in texto
+    ):
+
+        print("SERVICIO: electronica")
+
+        return "electronica"
+
+    # =====================================
+    # MONITOREO
+    # =====================================
+    if "monitoreo" in texto:
+
+        print("SERVICIO: monitoreo")
+
+        return "monitoreo"
+
+    print("SERVICIO: None")
+
     return None
 # =========================
 # PLANTILLA
@@ -928,7 +904,10 @@ async def procesar(
         modalidad = detectar_modalidad(doc)
 
         print("MODALIDAD:", modalidad)
-
+        
+        print("SERVICIO DETECTADO:", servicio)
+        print("DETALLE DETECTADO:", detalle)
+        print("MODALIDAD DETECTADA:", modalidad)
         # =========================
         # SELECCIONAR PLANTILLA
         # =========================
