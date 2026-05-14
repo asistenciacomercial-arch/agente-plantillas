@@ -925,10 +925,7 @@ async def procesar(
         # GENERO Y SALUDO
         # =========================
         
-        tratamiento = obtener_tratamiento(
-            datos["nombre"],
-            datos["cargo"]
-        )
+        tratamiento = obtener_tratamiento(datos["nombre"])
         
         primer_nombre = obtener_primer_nombre_real(
             datos["nombre"]
