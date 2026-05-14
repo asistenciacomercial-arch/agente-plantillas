@@ -86,7 +86,7 @@ def detectar_genero(nombre):
         if pl in masculinos:
             return "m"
 
-    return "f or m"
+    return "m"
 
 
 # =====================================
@@ -639,136 +639,119 @@ def detectar_detalle(doc):
 
     texto = obtener_texto_completo(doc)
 
+    print("TEXTO DETALLE:")
     print(texto)
 
     # =====================================
-    # VARIABLES
+    # DETECTAR SERVICIO
     # =====================================
+    servicio = detectar_servicio(doc)
 
-    tiene_motorizado = (
+    print("SERVICIO DETECTADO:", servicio)
 
-        "motorizado" in texto
-        or "moto" in texto
-        or "rodamiento" in texto
-    )
+    # ==================================================
+    # VIGILANCIA
+    # ==================================================
+    if servicio == "vigilancia":
 
-    tiene_conductor = (
-
-        "conductor" in texto
-        or "chofer" in texto
-        or "driver" in texto
-        or "vehiculo" in texto
-        or "vehículo" in texto
-    )
-
-    tiene_apie = (
-
-        "a pie" in texto
-        or "acompanante" in texto
-        or "acompañante" in texto
-    )
-
-    print("MOTORIZADO:", tiene_motorizado)
-    print("CONDUCTOR:", tiene_conductor)
-    print("A PIE:", tiene_apie)
-
-    modalidades_detectadas = []
-
-    # =====================================
-    # MODALIDADES
-    # =====================================
-
-    if tiene_motorizado:
-        modalidades_detectadas.append("motorizado")
-
-    if tiene_conductor:
-        modalidades_detectadas.append("conductor")
-
-    if tiene_apie:
-        modalidades_detectadas.append("a_pie")
-
-    # =====================================
-    # MULTIPLE
-    # =====================================
-
-    if len(modalidades_detectadas) >= 2:
-
-        print("DETALLE: multiple")
-
-        return "multiple"
-
-    # =====================================
-    # SOLO UNA
-    # =====================================
-
-    if len(modalidades_detectadas) == 1:
-
-        print(
-            "DETALLE:",
-            modalidades_detectadas[0]
+        tiene_armada = (
+            "armado" in texto
+            or "armada" in texto
         )
 
-        return modalidades_detectadas[0]
+        tiene_sin_arma = (
+            "sin arma" in texto
+            or "medio de comunicacion" in texto
+            or "medio de comunicación" in texto
+        )
 
-    # =====================================
-    # ESCOLTA GENERAL
-    # =====================================
+        print("ARMADA:", tiene_armada)
+        print("SIN ARMA:", tiene_sin_arma)
 
-    if "escolta" in texto:
+        # MIXTA
+        if tiene_armada and tiene_sin_arma:
+
+            print("DETALLE: vigilancia_mixta")
+
+            return "vigilancia_mixta"
+
+        # ARMADA
+        if tiene_armada:
+
+            print("DETALLE: armada")
+
+            return "armada"
+
+        # SIN ARMA
+        if tiene_sin_arma:
+
+            print("DETALLE: sin_arma")
+
+            return "sin_arma"
+
+        print("DETALLE: vigilancia")
+
+        return "vigilancia"
+
+    # ==================================================
+    # ESCOLTAS
+    # ==================================================
+    if servicio == "escolta":
+
+        tiene_motorizado = (
+
+            "motorizado" in texto
+            or "moto" in texto
+            or "rodamiento" in texto
+        )
+
+        tiene_conductor = (
+
+            "conductor escolta" in texto
+            or "conductor" in texto
+            or "chofer" in texto
+            or "driver" in texto
+        )
+
+        tiene_apie = (
+
+            "a pie" in texto
+            or "acompanante" in texto
+            or "acompañante" in texto
+        )
+
+        modalidades = []
+
+        if tiene_motorizado:
+            modalidades.append("motorizado")
+
+        if tiene_conductor:
+            modalidades.append("conductor")
+
+        if tiene_apie:
+            modalidades.append("a_pie")
+
+        print("MODALIDADES ESCOLTA:", modalidades)
+
+        # MULTIPLE
+        if len(modalidades) >= 2:
+
+            print("DETALLE: multiple")
+
+            return "multiple"
+
+        # UNA
+        if len(modalidades) == 1:
+
+            print("DETALLE:", modalidades[0])
+
+            return modalidades[0]
 
         print("DETALLE: general")
 
         return "general"
 
-    # =====================================
-    # VIGILANCIA
-    # =====================================
-
-    tiene_armada = (
-        "armado" in texto
-        or "armada" in texto
-    )
-
-    tiene_sin_arma = (
-        "sin arma" in texto
-        or "medio de comunicacion" in texto
-    )
-
-    if tiene_armada and tiene_sin_arma:
-
-        return "vigilancia_mixta"
-
-    if tiene_armada:
-
-        return "armada"
-
-    if tiene_sin_arma:
-
-        return "sin_arma"
-
     return None
-def detectar_modalidad(doc):
-
-    texto = ""
-
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                texto += " " + cell.text.lower()
-
-    print("MODALIDAD:", texto)
-
-    if "mensual" in texto:
-        return "m"
-
-    if "fortalecimiento" in texto:
-        return "f"
-
-    if "evento" in texto:
-        return "e"
-
-    return "m"
-import re
 
 # =========================
 # EXTRAER CONSECUTIVO
