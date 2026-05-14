@@ -64,32 +64,43 @@ def detectar_genero(nombre):
 
     nombre = nombre.lower()
 
-    femeninos = [
-        "maria","ana","laura","paula","andrea","carolina",
-        "diana","luisa","patricia","camila","valentina",
-        "anverly","solange","nancy","lina","adriana",
-        "monica","claudia","johana","tatiana","veronica",
-        "dayana","yohana","juliana","angela","sandra"
+    mujeres = [
+
+        "liliana",
+        "maria",
+        "paula",
+        "andrea",
+        "carolina",
+        "ana",
+        "laura",
+        "diana",
+        "adriana",
+        "luisa",
+        "catalina",
+        "isabel",
+        "patricia",
+        "solis"
     ]
 
-    masculinos = [
-        "juan","carlos","manuel","ivan","andres","luis",
-        "felipe","daniel","miguel","jose","eduardo",
-        "sebastian","david","alejandro","ricardo",
-        "hector","oscar","diego","jorge","kevin"
+    hombres = [
+
+        "carlos",
+        "juan",
+        "pedro",
+        "andres",
+        "manuel",
+        "ivan",
+        "jose",
+        "luis"
     ]
 
-    palabras = nombre.split()
+    primer = nombre.split()[0]
 
-    for p in palabras:
+    if primer in mujeres:
+        return "f"
 
-        pl = p.lower().strip()
-
-        if pl in femeninos:
-            return "f"
-
-        if pl in masculinos:
-            return "m"
+    if primer in hombres:
+        return "m"
 
     return "m"
 
@@ -125,30 +136,9 @@ def obtener_primer_nombre_real(nombre):
 # =====================================
 # TRATAMIENTO
 # =====================================
-def obtener_tratamiento(nombre, cargo):
+def obtener_tratamiento(nombre):
 
     genero = detectar_genero(nombre)
-
-    cargo = cargo.lower()
-
-    es_directivo = any(x in cargo for x in [
-        "director",
-        "directora",
-        "gerente",
-        "presidente",
-        "presidenta",
-        "coordinador",
-        "coordinadora",
-        "jefe",
-        "jefa"
-    ])
-
-    if es_directivo:
-
-        if genero == "f":
-            return "Doctora"
-
-        return "Doctor"
 
     if genero == "f":
         return "Señora"
