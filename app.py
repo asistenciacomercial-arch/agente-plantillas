@@ -1,4 +1,9 @@
+import os
+import shutil
 import unicodedata
+import re
+
+from io import BytesIO
 
 def normalizar(txt):
 
