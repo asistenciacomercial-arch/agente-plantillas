@@ -799,6 +799,41 @@ def extraer_consecutivo(doc):
             return resultado.group(0)
 
     return None
+# =========================
+# DETECTAR MODALIDAD
+# =========================
+def detectar_modalidad(doc):
+
+    texto = obtener_texto_completo(doc)
+
+    print("TEXTO MODALIDAD:")
+    print(texto)
+
+    # =====================================
+    # MENSUAL
+    # =====================================
+    if (
+        "mensual" in texto
+        or "mes" in texto
+    ):
+        return "m"
+
+    # =====================================
+    # FORTALECIMIENTO
+    # =====================================
+    if "fortalecimiento" in texto:
+        return "f"
+
+    # =====================================
+    # EVENTO
+    # =====================================
+    if "evento" in texto:
+        return "e"
+
+    # =====================================
+    # DEFAULT
+    # =====================================
+    return "m"
     
 # =========================
 # API
