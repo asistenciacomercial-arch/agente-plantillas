@@ -420,15 +420,139 @@ def detectar_servicio(doc):
 # =========================
 # PLANTILLA
 # =========================
-# =====================================
-# EVENTOS
-# =====================================
-if servicio == "eventos":
+def seleccionar_plantilla(
+    servicio,
+    detalle,
+    modalidad
+):
 
+    print("==== SELECCIONAR PLANTILLA ====")
+    print("SERVICIO:", servicio)
+    print("DETALLE:", detalle)
+    print("MODALIDAD:", modalidad)
+
+    # =====================================
+    # SEGURIDAD EN EVENTOS
+    # =====================================
+    if servicio == "eventos":
+
+        return (
+            "plantillas/"
+            "seguridad_en_eventos.docx"
+        )
+
+    # =====================================
+    # ESCOLTAS
+    # =====================================
+    if servicio == "escolta":
+
+        # MULTIPLE
+        if detalle == "multiple":
+
+            return (
+                "plantillas/"
+                "escolta_mensual.docx"
+            )
+
+        # CONDUCTOR
+        if detalle == "conductor":
+
+            return (
+                "plantillas/"
+                "escolta_conductor.docx"
+            )
+
+        # MOTORIZADO
+        if detalle == "motorizado":
+
+            return (
+                "plantillas/"
+                "escolta_motorizado.docx"
+            )
+
+        # A PIE
+        if detalle == "a_pie":
+
+            return (
+                "plantillas/"
+                "escolta_apie.docx"
+            )
+
+        # GENERAL
+        return (
+            "plantillas/"
+            "escolta_mensual.docx"
+        )
+
+    # =====================================
+    # VIGILANCIA
+    # =====================================
+    if servicio == "vigilancia":
+
+        if detalle == "vigilancia":
+
+            return (
+                "plantillas/"
+                "vigilancia_m.docx"
+            )
+
+        if detalle == "armada":
+
+            return (
+                "plantillas/"
+                "vigilancia_armada.docx"
+            )
+
+        if detalle == "sin_arma":
+
+            return (
+                "plantillas/"
+                "vigilancia_sin_arma.docx"
+            )
+
+        return (
+            "plantillas/"
+            "vigilancia_m.docx"
+        )
+
+    # =====================================
+    # CONFIABILIDAD
+    # =====================================
+    if servicio == "confiabilidad":
+
+        return (
+            "plantillas/"
+            "confiabilidad.docx"
+        )
+
+    # =====================================
+    # ELECTRONICA
+    # =====================================
+    if servicio == "electronica":
+
+        return (
+            "plantillas/"
+            "seguridad_electronica.docx"
+        )
+
+    # =====================================
+    # MONITOREO
+    # =====================================
+    if servicio == "monitoreo":
+
+        return (
+            "plantillas/"
+            "monitoreo.docx"
+        )
+
+    # =====================================
+    # DEFAULT
+    # =====================================
     return (
         "plantillas/"
-        "eventos.docx"
+        "default.docx"
     )
+
 def generar_titulos(servicio, detalle):
 
     titulo_ref = ""
