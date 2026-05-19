@@ -303,6 +303,9 @@ def extraer_datos(doc):
 # =========================
 # DETECTAR SERVICIO
 # =========================
+# =========================
+# DETECTAR SERVICIO
+# =========================
 def detectar_servicio(doc):
 
     texto = obtener_texto_completo(doc)
@@ -313,6 +316,22 @@ def detectar_servicio(doc):
     servicios_detectados = []
 
     # =====================================
+    # SEGURIDAD EN EVENTOS
+    # =====================================
+    if (
+
+        "evento" in texto
+        or "eventos" in texto
+        or "seguridad en eventos" in texto
+        or "seguridad para eventos" in texto
+        or "control de acceso" in texto
+        or "logistica de eventos" in texto
+        or "logística de eventos" in texto
+    ):
+
+        servicios_detectados.append("eventos")
+
+    # =====================================
     # ESCOLTAS
     # =====================================
     if (
@@ -321,7 +340,6 @@ def detectar_servicio(doc):
         or "conductor escolta" in texto
         or "escolta motorizado" in texto
         or "acompanante" in texto
-        or "acompañante" in texto
     ):
 
         servicios_detectados.append("escolta")
@@ -347,7 +365,6 @@ def detectar_servicio(doc):
     if (
 
         "seguridad electronica" in texto
-        or "seguridad electrónica" in texto
         or "cctv" in texto
         or "alarmas" in texto
     ):
@@ -381,6 +398,7 @@ def detectar_servicio(doc):
     # =====================================
     prioridad = [
 
+        "eventos",
         "escolta",
         "vigilancia",
         "electronica",
@@ -402,127 +420,14 @@ def detectar_servicio(doc):
 # =========================
 # PLANTILLA
 # =========================
-def seleccionar_plantilla(
-    servicio,
-    detalle,
-    modalidad
-):
+# =====================================
+# EVENTOS
+# =====================================
+if servicio == "eventos":
 
-    print("==== SELECCIONAR PLANTILLA ====")
-    print("SERVICIO:", servicio)
-    print("DETALLE:", detalle)
-    print("MODALIDAD:", modalidad)
-
-    # =====================================
-    # ESCOLTAS
-    # =====================================
-    if servicio == "escolta":
-
-        # MULTIPLE
-        if detalle == "multiple":
-
-            return (
-                "plantillas/"
-                "escolta_mensual.docx"
-            )
-
-        # CONDUCTOR
-        if detalle == "conductor":
-
-            return (
-                "plantillas/"
-                "escolta_conductor.docx"
-            )
-
-        # MOTORIZADO
-        if detalle == "motorizado":
-
-            return (
-                "plantillas/"
-                "escolta_motorizado.docx"
-            )
-
-        # A PIE
-        if detalle == "a_pie":
-
-            return (
-                "plantillas/"
-                "escolta_apie.docx"
-            )
-
-        # GENERAL
-        return (
-            "plantillas/"
-            "escolta_mensual.docx"
-        )
-
-    # =====================================
-    # VIGILANCIA
-    # =====================================
-    if servicio == "vigilancia":
-
-        if detalle == "vigilancia":
-
-            return (
-                "plantillas/"
-                "vigilancia_m.docx"
-            )
-
-        if detalle == "armada":
-
-            return (
-                "plantillas/"
-                "vigilancia_armada.docx"
-            )
-
-        if detalle == "sin_arma":
-
-            return (
-                "plantillas/"
-                "vigilancia_sin_arma.docx"
-            )
-
-        return (
-            "plantillas/"
-            "vigilancia_m.docx"
-        )
-
-    # =====================================
-    # CONFIABILIDAD
-    # =====================================
-    if servicio == "confiabilidad":
-
-        return (
-            "plantillas/"
-            "confiabilidad.docx"
-        )
-
-    # =====================================
-    # ELECTRONICA
-    # =====================================
-    if servicio == "electronica":
-
-        return (
-            "plantillas/"
-            "electronica.docx"
-        )
-
-    # =====================================
-    # MONITOREO
-    # =====================================
-    if servicio == "monitoreo":
-
-        return (
-            "plantillas/"
-            "monitoreo.docx"
-        )
-
-    # =====================================
-    # DEFAULT
-    # =====================================
     return (
         "plantillas/"
-        "default.docx"
+        "eventos.docx"
     )
 def generar_titulos(servicio, detalle):
 
