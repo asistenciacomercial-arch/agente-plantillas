@@ -300,6 +300,9 @@ def extraer_datos(doc):
 # =========================
 # DETECTAR SERVICIO DESDE TABLA X
 # =========================
+# =========================
+# DETECTAR SERVICIO
+# =========================
 def detectar_servicio(doc):
 
     texto = obtener_texto_completo(doc)
@@ -307,21 +310,7 @@ def detectar_servicio(doc):
     print("=== TEXTO SERVICIO ===")
     print(texto)
 
-    # =====================================
-    # CONFIABILIDAD
-    # =====================================
-    if (
-
-        "confiabilidad" in texto
-        or "estudio de seguridad" in texto
-        or "visita domiciliaria" in texto
-        or "poligrafo" in texto
-        or "polígrafo" in texto
-    ):
-
-        print("SERVICIO: confiabilidad")
-
-        return "confiabilidad"
+    servicios_detectados = []
 
     # =====================================
     # ESCOLTAS
@@ -331,13 +320,11 @@ def detectar_servicio(doc):
         "escolta" in texto
         or "conductor escolta" in texto
         or "escolta motorizado" in texto
-        or "acompañante" in texto
         or "acompanante" in texto
+        or "acompañante" in texto
     ):
 
-        print("SERVICIO: escolta")
-
-        return "escolta"
+        servicios_detectados.append("escolta")
 
     # =====================================
     # VIGILANCIA
@@ -349,11 +336,10 @@ def detectar_servicio(doc):
         or "guardas de seguridad" in texto
         or "sin arma" in texto
         or "servicio armado" in texto
+        or "vigilancia" in texto
     ):
 
-        print("SERVICIO: vigilancia")
-
-        return "vigilancia"
+        servicios_detectados.append("vigilancia")
 
     # =====================================
     # ELECTRONICA
@@ -366,18 +352,49 @@ def detectar_servicio(doc):
         or "alarmas" in texto
     ):
 
-        print("SERVICIO: electronica")
-
-        return "electronica"
+        servicios_detectados.append("electronica")
 
     # =====================================
     # MONITOREO
     # =====================================
     if "monitoreo" in texto:
 
-        print("SERVICIO: monitoreo")
+        servicios_detectados.append("monitoreo")
 
-        return "monitoreo"
+    # =====================================
+    # CONFIABILIDAD
+    # =====================================
+    if (
+
+        "confiabilidad" in texto
+        or "estudio de seguridad" in texto
+        or "visita domiciliaria" in texto
+        or "poligrafo" in texto
+    ):
+
+        servicios_detectados.append("confiabilidad")
+
+    print("SERVICIOS DETECTADOS:", servicios_detectados)
+
+    # =====================================
+    # PRIORIDAD
+    # =====================================
+    prioridad = [
+
+        "escolta",
+        "vigilancia",
+        "electronica",
+        "monitoreo",
+        "confiabilidad"
+    ]
+
+    for p in prioridad:
+
+        if p in servicios_detectados:
+
+            print("SERVICIO FINAL:", p)
+
+            return p
 
     print("SERVICIO: None")
 
