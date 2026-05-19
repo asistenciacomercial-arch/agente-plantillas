@@ -310,113 +310,210 @@ def detectar_servicio(doc):
 
     texto = obtener_texto_completo(doc)
 
-    print("=== TEXTO SERVICIO ===")
+    print("===================================")
+    print("TEXTO ANALIZADO:")
     print(texto)
-
-    servicios_detectados = []
+    print("===================================")
 
     # =====================================
+    # SCORES
+    # =====================================
+    scores = {
+
+        "eventos": 0,
+        "escolta": 0,
+        "vigilancia": 0,
+        "electronica": 0,
+        "monitoreo": 0,
+        "confiabilidad": 0
+    }
+
+    # =========================================================
     # SEGURIDAD EN EVENTOS
-    # =====================================
-    if (
+    # SOLO FRASES MUY ESPECIFICAS
+    # =========================================================
+    keywords_eventos = [
 
-        "evento" in texto
-        or "eventos" in texto
-        or "seguridad en eventos" in texto
-        or "seguridad para eventos" in texto
-        or "control de acceso" in texto
-        or "logistica de eventos" in texto
-        or "logística de eventos" in texto
-    ):
-
-        servicios_detectados.append("eventos")
-
-    # =====================================
-    # ESCOLTAS
-    # =====================================
-    if (
-
-        "escolta" in texto
-        or "conductor escolta" in texto
-        or "escolta motorizado" in texto
-        or "acompanante" in texto
-    ):
-
-        servicios_detectados.append("escolta")
-
-    # =====================================
-    # VIGILANCIA
-    # =====================================
-    if (
-
-        "servicio de vigilancia" in texto
-        or "guarda de seguridad" in texto
-        or "guardas de seguridad" in texto
-        or "sin arma" in texto
-        or "servicio armado" in texto
-        or "vigilancia" in texto
-    ):
-
-        servicios_detectados.append("vigilancia")
-
-    # =====================================
-    # ELECTRONICA
-    # =====================================
-    if (
-
-        "seguridad electronica" in texto
-        or "cctv" in texto
-        or "alarmas" in texto
-    ):
-
-        servicios_detectados.append("electronica")
-
-    # =====================================
-    # MONITOREO
-    # =====================================
-    if "monitoreo" in texto:
-
-        servicios_detectados.append("monitoreo")
-
-    # =====================================
-    # CONFIABILIDAD
-    # =====================================
-    if (
-
-        "confiabilidad" in texto
-        or "estudio de seguridad" in texto
-        or "visita domiciliaria" in texto
-        or "poligrafo" in texto
-    ):
-
-        servicios_detectados.append("confiabilidad")
-
-    print("SERVICIOS DETECTADOS:", servicios_detectados)
-
-    # =====================================
-    # PRIORIDAD
-    # =====================================
-    prioridad = [
-
-        "eventos",
-        "escolta",
-        "vigilancia",
-        "electronica",
-        "monitoreo",
-        "confiabilidad"
+        "seguridad en eventos",
+        "seguridad para eventos",
+        "logistica de eventos",
+        "logistica evento",
+        "personal para eventos",
+        "control de acceso para eventos",
+        "evento corporativo",
+        "evento empresarial",
+        "seguridad evento",
+        "staff de seguridad para evento"
     ]
 
-    for p in prioridad:
+    for k in keywords_eventos:
 
-        if p in servicios_detectados:
+        if k in texto:
 
-            print("SERVICIO FINAL:", p)
+            scores["eventos"] += 3
 
-            return p
+            print("EVENTOS MATCH:", k)
 
-    print("SERVICIO: None")
+    # =========================================================
+    # ESCOLTAS
+    # =========================================================
+    keywords_escolta = [
 
-    return None
+        "escolta",
+        "conductor escolta",
+        "escolta motorizado",
+        "esquema de seguridad",
+        "proteccion ejecutiva",
+        "proteccion personal",
+        "acompanamiento armado",
+        "acompanante de seguridad",
+        "driver escolta",
+        "escolta vip"
+    ]
+
+    for k in keywords_escolta:
+
+        if k in texto:
+
+            scores["escolta"] += 2
+
+            print("ESCOLTA MATCH:", k)
+
+    # =========================================================
+    # VIGILANCIA
+    # =========================================================
+    keywords_vigilancia = [
+
+        "servicio de vigilancia",
+        "vigilancia fisica",
+        "guarda de seguridad",
+        "guardas de seguridad",
+        "puesto de vigilancia",
+        "servicio armado",
+        "sin arma",
+        "vigilante",
+        "porteria",
+        "control de acceso",
+        "ronda de vigilancia",
+        "medio de comunicacion",
+        "supervisor de puesto",
+        "seguridad privada"
+    ]
+
+    for k in keywords_vigilancia:
+
+        if k in texto:
+
+            scores["vigilancia"] += 2
+
+            print("VIGILANCIA MATCH:", k)
+
+    # =========================================================
+    # SEGURIDAD ELECTRONICA
+    # =========================================================
+    keywords_electronica = [
+
+        "seguridad electronica",
+        "cctv",
+        "alarmas",
+        "camaras",
+        "camaras de seguridad",
+        "sensor de movimiento",
+        "panel de alarma",
+        "video vigilancia",
+        "control de acceso biometrico",
+        "deteccion de intrusion"
+    ]
+
+    for k in keywords_electronica:
+
+        if k in texto:
+
+            scores["electronica"] += 2
+
+            print("ELECTRONICA MATCH:", k)
+
+    # =========================================================
+    # MONITOREO
+    # =========================================================
+    keywords_monitoreo = [
+
+        "monitoreo",
+        "central de monitoreo",
+        "monitoreo remoto",
+        "reaccion motorizada",
+        "seguimiento satelital",
+        "monitoreo gps"
+    ]
+
+    for k in keywords_monitoreo:
+
+        if k in texto:
+
+            scores["monitoreo"] += 2
+
+            print("MONITOREO MATCH:", k)
+
+    # =========================================================
+    # CONFIABILIDAD
+    # =========================================================
+    keywords_confiabilidad = [
+
+        "estudio de seguridad",
+        "visita domiciliaria",
+        "poligrafo",
+        "prueba de poligrafo",
+        "analisis de confiabilidad",
+        "investigacion de antecedentes",
+        "validacion de antecedentes",
+        "prueba de confiabilidad"
+    ]
+
+    for k in keywords_confiabilidad:
+
+        if k in texto:
+
+            scores["confiabilidad"] += 2
+
+            print("CONFIABILIDAD MATCH:", k)
+
+    # =====================================
+    # RESULTADOS
+    # =====================================
+    print("===================================")
+    print("SCORES FINALES:")
+    print(scores)
+    print("===================================")
+
+    # =====================================
+    # OBTENER MAYOR SCORE
+    # =====================================
+    servicio_final = None
+    score_mayor = 0
+
+    for servicio, score in scores.items():
+
+        if score > score_mayor:
+
+            score_mayor = score
+            servicio_final = servicio
+
+    # =====================================
+    # VALIDAR MINIMO
+    # =====================================
+    if score_mayor <= 0:
+
+        print("NO SE DETECTO SERVICIO")
+
+        return None
+
+    print("===================================")
+    print("SERVICIO FINAL:", servicio_final)
+    print("SCORE:", score_mayor)
+    print("===================================")
+
+    return servicio_final
+    
 # =========================
 # PLANTILLA
 # =========================
